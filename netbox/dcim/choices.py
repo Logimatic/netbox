@@ -1008,7 +1008,55 @@ class CableTypeChoices(ChoiceSet):
     TYPE_AOC = 'aoc'
     TYPE_POWER = 'power'
 
+    # Logimatic specials
+
+    # CAT
+    TYPE_CAT6A_SFTP_LSZH = 'cat6a-sftp-lszh'
+    TYPE_CAT7_SFTP_LSZH = 'cat7-sftp-lszh'
+    # MMF
+    TYPE_MMF_OM3_LSZH = 'mmf-om3-lszh'
+    TYPE_MMF_OM3_LSZH_2x6 = 'mmf-om3-lszh-2x6'
+    TYPE_MMF_OM3_LSZH_lclc = 'mmf-om3-lszh-lclc'
+    TYPE_MMF_OM3_LSZH_lcsc = 'mmf-om3-lszh-lcsc'
+    TYPE_MMF_OM3_LSZH_lcst = 'mmf-om3-lszh-lcst'
+    TYPE_MMF_OM3_LSZH_scsc = 'mmf-om3-lszh-scsc'
+    TYPE_MMF_OM3_LSZH_stsc = 'mmf-om3-lszh-stsc'
+    TYPE_MMF_OM3_LSZH_stst = 'mmf-om3-lszh-stst'
+
+    TYPE_MMF_OM1_LSZH = 'mmf-om1-lszh'
+    TYPE_MMF_OM1_LSZH_2x4 = 'mmf-om1-lszh-2x4'
+    TYPE_MMF_OM1_LSZH_lclc = 'mmf-om1-lszh-lclc'
+    TYPE_MMF_OM1_LSZH_lcsc = 'mmf-om1-lszh-lcsc'
+    TYPE_MMF_OM1_LSZH_lcst = 'mmf-om1-lszh-lcst'
+    TYPE_MMF_OM1_LSZH_scsc = 'mmf-om1-lszh-scsc'
+    TYPE_MMF_OM1_LSZH_stsc = 'mmf-om1-lszh-stsc'
+    TYPE_MMF_OM1_LSZH_stst = 'mmf-om1-lszh-stst'
+
     CHOICES = (
+        (
+            'LMCE', (
+                (TYPE_CAT6A_SFTP_LSZH, 'CAT6a S/FTP LSZH'),
+                (TYPE_CAT7_SFTP_LSZH, 'CAT7 S/FTP LSZH'),
+
+                (TYPE_MMF_OM3_LSZH, 'MM Fiber (OM3) LSZH'),
+                (TYPE_MMF_OM3_LSZH_2x6, 'MM Fiber (OM3) LSZH 2x6'),
+                (TYPE_MMF_OM3_LSZH_lclc, 'MM Fiber (OM3) LSZH (LC/LC) patch'),
+                (TYPE_MMF_OM3_LSZH_lcsc, 'MM Fiber (OM3) LSZH (LC/SC) patch'),
+                (TYPE_MMF_OM3_LSZH_lcst, 'MM Fiber (OM3) LSZH (LC/ST) patch'),
+                (TYPE_MMF_OM3_LSZH_scsc, 'MM Fiber (OM3) LSZH (SC/SC) patch'),
+                (TYPE_MMF_OM3_LSZH_stsc, 'MM Fiber (OM3) LSZH (ST/SC) patch'),
+                (TYPE_MMF_OM3_LSZH_stst, 'MM Fiber (OM3) LSZH (ST/ST) patch'),
+
+                (TYPE_MMF_OM1_LSZH, 'MM Fiber (OM1) LSZH'),
+                (TYPE_MMF_OM1_LSZH_2x4, 'MM Fiber (OM1) LSZH 2x4'),
+                (TYPE_MMF_OM1_LSZH_lclc, 'MM Fiber (OM1) LSZH (LC/LC) patch'),
+                (TYPE_MMF_OM1_LSZH_lcsc, 'MM Fiber (OM1) LSZH (LC/SC) patch'),
+                (TYPE_MMF_OM1_LSZH_lcst, 'MM Fiber (OM1) LSZH (LC/ST) patch'),
+                (TYPE_MMF_OM1_LSZH_scsc, 'MM Fiber (OM1) LSZH (SC/SC) patch'),
+                (TYPE_MMF_OM1_LSZH_stsc, 'MM Fiber (OM1) LSZH (ST/SC) patch'),
+                (TYPE_MMF_OM1_LSZH_stst, 'MM Fiber (OM1) LSZH (ST/ST) patch'),
+            ),
+        ),
         (
             'Copper', (
                 (TYPE_CAT3, 'CAT3'),
