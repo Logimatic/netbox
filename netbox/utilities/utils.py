@@ -1,12 +1,14 @@
 import datetime
 import json
+import urllib
 from collections import OrderedDict
 from itertools import count, groupby
+from typing import Any, Dict, List, Tuple
 
 from django.core.serializers import serialize
 from django.db.models import Count, OuterRef, Subquery
 from django.db.models.functions import Coalesce
-from jinja2 import Environment
+from jinja2.sandbox import SandboxedEnvironment
 from mptt.models import MPTTModel
 
 from dcim.choices import CableLengthUnitChoices
@@ -44,16 +46,19 @@ def csv_format(data):
     return ','.join(csv)
 
 
-def foreground_color(bg_color):
+def foreground_color(bg_color, dark='000000', light='ffffff'):
     """
-    Return the ideal foreground color (black or white) for a given background color in hexadecimal RGB format.
+    Return the ideal foreground color (dark or light) for a given background color in hexadecimal RGB format.
+
+    :param dark: RBG color code for dark text
+    :param light: RBG color code for light text
     """
     bg_color = bg_color.strip('#')
     r, g, b = [int(bg_color[c:c + 2], 16) for c in (0, 2, 4)]
     if r * 0.299 + g * 0.587 + b * 0.114 > 186:
-        return '000000'
+        return dark
     else:
-        return 'ffffff'
+        return light
 
 
 def dynamic_import(name):
@@ -105,7 +110,7 @@ def serialize_object(obj, extra=None):
 
     # Include any tags. Check for tags cached on the instance; fall back to using the manager.
     if is_taggable(obj):
-        tags = getattr(obj, '_tags', obj.tags.all())
+        tags = getattr(obj, '_tags', None) or obj.tags.all()
         data['tags'] = [tag.name for tag in tags]
 
     # Append any extra data
@@ -198,22 +203,26 @@ def to_meters(length, unit):
             "Unknown unit {}. Must be one of the following: {}".format(unit, ', '.join(valid_units))
         )
 
+    if unit == CableLengthUnitChoices.UNIT_KILOMETER:
+        return length * 1000
     if unit == CableLengthUnitChoices.UNIT_METER:
         return length
     if unit == CableLengthUnitChoices.UNIT_CENTIMETER:
         return length / 100
+    if unit == CableLengthUnitChoices.UNIT_MILE:
+        return length * 1609.344
     if unit == CableLengthUnitChoices.UNIT_FOOT:
         return length * 0.3048
     if unit == CableLengthUnitChoices.UNIT_INCH:
         return length * 0.3048 * 12
-    raise ValueError("Unknown unit {}. Must be 'm', 'cm', 'ft', or 'in'.".format(unit))
+    raise ValueError(f"Unknown unit {unit}. Must be 'km', 'm', 'cm', 'mi', 'ft', or 'in'.")
 
 
 def render_jinja2(template_code, context):
     """
     Render a Jinja2 template with the provided context. Return the rendered content.
     """
-    return Environment().from_string(source=template_code).render(**context)
+    return SandboxedEnvironment().from_string(source=template_code).render(**context)
 
 
 def prepare_cloned_fields(instance):
@@ -279,6 +288,45 @@ def flatten_dict(d, prefix='', separator='.'):
     return ret
 
 
+def decode_dict(encoded_dict: Dict, *, decode_keys: bool = True) -> Dict:
+    """
+    Recursively URL decode string keys and values of a dict.
+
+    For example, `{'1%2F1%2F1': {'1%2F1%2F2': ['1%2F1%2F3', '1%2F1%2F4']}}` would
+    become: `{'1/1/1': {'1/1/2': ['1/1/3', '1/1/4']}}`
+
+    :param encoded_dict: Dictionary to be decoded.
+    :param decode_keys: (Optional) Enable/disable decoding of dict keys.
+    """
+
+    def decode_value(value: Any, _decode_keys: bool) -> Any:
+        """
+        Handle URL decoding of any supported value type.
+        """
+        # Decode string values.
+        if isinstance(value, str):
+            return urllib.parse.unquote(value)
+        # Recursively decode each list item.
+        elif isinstance(value, list):
+            return [decode_value(v, _decode_keys) for v in value]
+        # Recursively decode each tuple item.
+        elif isinstance(value, Tuple):
+            return tuple(decode_value(v, _decode_keys) for v in value)
+        # Recursively decode each dict key/value pair.
+        elif isinstance(value, dict):
+            # Don't decode keys, if `decode_keys` is false.
+            if not _decode_keys:
+                return {k: decode_value(v, _decode_keys) for k, v in value.items()}
+            return {urllib.parse.unquote(k): decode_value(v, _decode_keys) for k, v in value.items()}
+        return value
+
+    if not decode_keys:
+        # Don't decode keys, if `decode_keys` is false.
+        return {k: decode_value(v, decode_keys) for k, v in encoded_dict.items()}
+
+    return {urllib.parse.unquote(k): decode_value(v, decode_keys) for k, v in encoded_dict.items()}
+
+
 # Taken from django.utils.functional (<3.0)
 def curry(_curried_func, *args, **kwargs):
     def _curried(*moreargs, **morekwargs):
@@ -300,8 +348,12 @@ def content_type_name(contenttype):
     """
     Return a proper ContentType name.
     """
-    meta = contenttype.model_class()._meta
-    return f'{meta.app_config.verbose_name} > {meta.verbose_name}'
+    try:
+        meta = contenttype.model_class()._meta
+        return f'{meta.app_config.verbose_name} > {meta.verbose_name}'
+    except AttributeError:
+        # Model no longer exists
+        return f'{contenttype.app_label} > {contenttype.model}'
 
 
 #

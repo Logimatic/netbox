@@ -1,3 +1,4 @@
+import logging
 from collections import OrderedDict
 
 from django.contrib import messages
@@ -7,6 +8,7 @@ from django.db import transaction
 from django.db.models import F, Prefetch
 from django.forms import ModelMultipleChoiceField, MultipleHiddenInput, modelformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.views.generic import View
@@ -16,12 +18,11 @@ from extras.views import ObjectChangeLogView, ObjectConfigContextView, ObjectJou
 from ipam.models import IPAddress, Prefix, Service, VLAN
 from ipam.tables import InterfaceIPAddressTable, InterfaceVLANTable
 from netbox.views import generic
-from secrets.models import Secret
 from utilities.forms import ConfirmationForm
 from utilities.paginator import EnhancedPaginator, get_paginate_count
 from utilities.permissions import get_permission_for_model
 from utilities.tables import paginate_table
-from utilities.utils import csv_format, count_related
+from utilities.utils import count_related
 from utilities.views import GetReturnURLMixin, ObjectPermissionRequiredMixin
 from virtualization.models import VirtualMachine
 from . import filtersets, forms, tables
@@ -695,6 +696,9 @@ class ManufacturerView(generic.ObjectView):
         ).annotate(
             instance_count=count_related(Device, 'device_type')
         )
+        inventory_items = InventoryItem.objects.restrict(request.user, 'view').filter(
+            manufacturer=instance
+        )
 
         devicetypes_table = tables.DeviceTypeTable(devicetypes)
         devicetypes_table.columns.hide('manufacturer')
@@ -702,6 +706,7 @@ class ManufacturerView(generic.ObjectView):
 
         return {
             'devicetypes_table': devicetypes_table,
+            'inventory_item_count': inventory_items.count(),
         }
 
 
@@ -871,7 +876,6 @@ class ConsolePortTemplateCreateView(generic.ComponentCreateView):
     queryset = ConsolePortTemplate.objects.all()
     form = forms.ConsolePortTemplateCreateForm
     model_form = forms.ConsolePortTemplateForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class ConsolePortTemplateEditView(generic.ObjectEditView):
@@ -906,7 +910,6 @@ class ConsoleServerPortTemplateCreateView(generic.ComponentCreateView):
     queryset = ConsoleServerPortTemplate.objects.all()
     form = forms.ConsoleServerPortTemplateCreateForm
     model_form = forms.ConsoleServerPortTemplateForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class ConsoleServerPortTemplateEditView(generic.ObjectEditView):
@@ -941,7 +944,6 @@ class PowerPortTemplateCreateView(generic.ComponentCreateView):
     queryset = PowerPortTemplate.objects.all()
     form = forms.PowerPortTemplateCreateForm
     model_form = forms.PowerPortTemplateForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class PowerPortTemplateEditView(generic.ObjectEditView):
@@ -976,7 +978,6 @@ class PowerOutletTemplateCreateView(generic.ComponentCreateView):
     queryset = PowerOutletTemplate.objects.all()
     form = forms.PowerOutletTemplateCreateForm
     model_form = forms.PowerOutletTemplateForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class PowerOutletTemplateEditView(generic.ObjectEditView):
@@ -1011,7 +1012,6 @@ class InterfaceTemplateCreateView(generic.ComponentCreateView):
     queryset = InterfaceTemplate.objects.all()
     form = forms.InterfaceTemplateCreateForm
     model_form = forms.InterfaceTemplateForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class InterfaceTemplateEditView(generic.ObjectEditView):
@@ -1046,7 +1046,6 @@ class FrontPortTemplateCreateView(generic.ComponentCreateView):
     queryset = FrontPortTemplate.objects.all()
     form = forms.FrontPortTemplateCreateForm
     model_form = forms.FrontPortTemplateForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class FrontPortTemplateEditView(generic.ObjectEditView):
@@ -1081,7 +1080,6 @@ class RearPortTemplateCreateView(generic.ComponentCreateView):
     queryset = RearPortTemplate.objects.all()
     form = forms.RearPortTemplateCreateForm
     model_form = forms.RearPortTemplateForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class RearPortTemplateEditView(generic.ObjectEditView):
@@ -1116,7 +1114,6 @@ class DeviceBayTemplateCreateView(generic.ComponentCreateView):
     queryset = DeviceBayTemplate.objects.all()
     form = forms.DeviceBayTemplateCreateForm
     model_form = forms.DeviceBayTemplateForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class DeviceBayTemplateEditView(generic.ObjectEditView):
@@ -1169,6 +1166,8 @@ class DeviceRoleView(generic.ObjectView):
 
         return {
             'devices_table': devices_table,
+            'device_count': Device.objects.filter(device_role=instance).count(),
+            'virtualmachine_count': VirtualMachine.objects.filter(role=instance).count(),
         }
 
 
@@ -1215,6 +1214,8 @@ class PlatformListView(generic.ObjectListView):
         vm_count=count_related(VirtualMachine, 'platform')
     )
     table = tables.PlatformTable
+    filterset = filtersets.PlatformFilterSet
+    filterset_form = forms.PlatformFilterForm
 
 
 class PlatformView(generic.ObjectView):
@@ -1290,9 +1291,6 @@ class DeviceView(generic.ObjectView):
         # Services
         services = Service.objects.restrict(request.user, 'view').filter(device=instance)
 
-        # Secrets
-        secrets = Secret.objects.restrict(request.user, 'view').filter(device=instance)
-
         # Find up to ten devices in the same site with the same functional role for quick reference.
         related_devices = Device.objects.restrict(request.user, 'view').filter(
             site=instance.site, device_role=instance.device_role
@@ -1304,7 +1302,6 @@ class DeviceView(generic.ObjectView):
 
         return {
             'services': services,
-            'secrets': secrets,
             'vc_members': vc_members,
             'related_devices': related_devices,
             'active_tab': 'device',
@@ -1633,7 +1630,6 @@ class ConsolePortCreateView(generic.ComponentCreateView):
     queryset = ConsolePort.objects.all()
     form = forms.ConsolePortCreateForm
     model_form = forms.ConsolePortForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class ConsolePortEditView(generic.ObjectEditView):
@@ -1693,7 +1689,6 @@ class ConsoleServerPortCreateView(generic.ComponentCreateView):
     queryset = ConsoleServerPort.objects.all()
     form = forms.ConsoleServerPortCreateForm
     model_form = forms.ConsoleServerPortForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class ConsoleServerPortEditView(generic.ObjectEditView):
@@ -1753,7 +1748,6 @@ class PowerPortCreateView(generic.ComponentCreateView):
     queryset = PowerPort.objects.all()
     form = forms.PowerPortCreateForm
     model_form = forms.PowerPortForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class PowerPortEditView(generic.ObjectEditView):
@@ -1813,7 +1807,6 @@ class PowerOutletCreateView(generic.ComponentCreateView):
     queryset = PowerOutlet.objects.all()
     form = forms.PowerOutletCreateForm
     model_form = forms.PowerOutletForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class PowerOutletEditView(generic.ObjectEditView):
@@ -1908,7 +1901,33 @@ class InterfaceCreateView(generic.ComponentCreateView):
     queryset = Interface.objects.all()
     form = forms.InterfaceCreateForm
     model_form = forms.InterfaceForm
-    template_name = 'dcim/device_component_add.html'
+    template_name = 'dcim/interface_create.html'
+
+    def post(self, request):
+        """
+        Override inherited post() method to handle request to assign newly created
+        interface objects (first object) to an IP Address object.
+        """
+        form = self.form(request.POST, initial=request.GET)
+        new_objs = self.validate_form(request, form)
+
+        if form.is_valid() and not form.errors:
+            if '_addanother' in request.POST:
+                return redirect(request.get_full_path())
+            elif new_objs is not None and '_assignip' in request.POST and len(new_objs) >= 1 and \
+                    request.user.has_perm('ipam.add_ipaddress'):
+                first_obj = new_objs[0].pk
+                return redirect(
+                    f'/ipam/ip-addresses/add/?interface={first_obj}&return_url={self.get_return_url(request)}'
+                )
+            else:
+                return redirect(self.get_return_url(request))
+
+        return render(request, self.template_name, {
+            'obj_type': self.queryset.model._meta.verbose_name,
+            'form': form,
+            'return_url': self.get_return_url(request),
+        })
 
 
 class InterfaceEditView(generic.ObjectEditView):
@@ -1968,7 +1987,6 @@ class FrontPortCreateView(generic.ComponentCreateView):
     queryset = FrontPort.objects.all()
     form = forms.FrontPortCreateForm
     model_form = forms.FrontPortForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class FrontPortEditView(generic.ObjectEditView):
@@ -2028,7 +2046,6 @@ class RearPortCreateView(generic.ComponentCreateView):
     queryset = RearPort.objects.all()
     form = forms.RearPortCreateForm
     model_form = forms.RearPortForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class RearPortEditView(generic.ObjectEditView):
@@ -2088,7 +2105,6 @@ class DeviceBayCreateView(generic.ComponentCreateView):
     queryset = DeviceBay.objects.all()
     form = forms.DeviceBayCreateForm
     model_form = forms.DeviceBayForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class DeviceBayEditView(generic.ObjectEditView):
@@ -2214,7 +2230,6 @@ class InventoryItemCreateView(generic.ComponentCreateView):
     queryset = InventoryItem.objects.all()
     form = forms.InventoryItemCreateForm
     model_form = forms.InventoryItemForm
-    template_name = 'dcim/device_component_add.html'
 
 
 class InventoryItemDeleteView(generic.ObjectDeleteView):
@@ -2399,11 +2414,16 @@ class PathTraceView(generic.ObjectView):
         # Get the total length of the cable and whether the length is definitive (fully defined)
         total_length, is_definitive = path.get_total_length() if path else (None, False)
 
+        # Determine the path to the SVG trace image
+        api_viewname = f"{path.origin._meta.app_label}-api:{path.origin._meta.model_name}-trace"
+        svg_url = f"{reverse(api_viewname, kwargs={'pk': path.origin.pk})}?render=svg"
+
         return {
             'path': path,
             'related_paths': related_paths,
             'total_length': total_length,
-            'is_definitive': is_definitive
+            'is_definitive': is_definitive,
+            'svg_url': svg_url,
         }
 
 
@@ -2507,23 +2527,7 @@ class ConsoleConnectionsListView(generic.ObjectListView):
     filterset_form = forms.ConsoleConnectionFilterForm
     table = tables.ConsoleConnectionTable
     template_name = 'dcim/connections_list.html'
-
-    def queryset_to_csv(self):
-        csv_data = [
-            # Headers
-            ','.join(['console_server', 'port', 'device', 'console_port', 'reachable'])
-        ]
-        for obj in self.queryset:
-            csv = csv_format([
-                obj._path.destination.device.identifier if obj._path.destination else None,
-                obj._path.destination.name if obj._path.destination else None,
-                obj.device.identifier,
-                obj.name,
-                obj._path.is_active
-            ])
-            csv_data.append(csv)
-
-        return '\n'.join(csv_data)
+    action_buttons = ('export',)
 
     def extra_context(self):
         return {
@@ -2537,23 +2541,7 @@ class PowerConnectionsListView(generic.ObjectListView):
     filterset_form = forms.PowerConnectionFilterForm
     table = tables.PowerConnectionTable
     template_name = 'dcim/connections_list.html'
-
-    def queryset_to_csv(self):
-        csv_data = [
-            # Headers
-            ','.join(['pdu', 'outlet', 'device', 'power_port', 'reachable'])
-        ]
-        for obj in self.queryset:
-            csv = csv_format([
-                obj._path.destination.device.identifier if obj._path.destination else None,
-                obj._path.destination.name if obj._path.destination else None,
-                obj.device.identifier,
-                obj.name,
-                obj._path.is_active
-            ])
-            csv_data.append(csv)
-
-        return '\n'.join(csv_data)
+    action_buttons = ('export',)
 
     def extra_context(self):
         return {
@@ -2562,34 +2550,12 @@ class PowerConnectionsListView(generic.ObjectListView):
 
 
 class InterfaceConnectionsListView(generic.ObjectListView):
-    queryset = Interface.objects.filter(
-        # Avoid duplicate connections by only selecting the lower PK in a connected pair
-        _path__isnull=False,
-        pk__lt=F('_path__destination_id')
-    ).order_by('device')
+    queryset = Interface.objects.filter(_path__isnull=False).order_by('device')
     filterset = filtersets.InterfaceConnectionFilterSet
     filterset_form = forms.InterfaceConnectionFilterForm
     table = tables.InterfaceConnectionTable
     template_name = 'dcim/connections_list.html'
-
-    def queryset_to_csv(self):
-        csv_data = [
-            # Headers
-            ','.join([
-                'device_a', 'interface_a', 'device_b', 'interface_b', 'reachable'
-            ])
-        ]
-        for obj in self.queryset:
-            csv = csv_format([
-                obj._path.destination.device.identifier if obj._path.destination else None,
-                obj._path.destination.name if obj._path.destination else None,
-                obj.device.identifier,
-                obj.name,
-                obj._path.is_active
-            ])
-            csv_data.append(csv)
-
-        return '\n'.join(csv_data)
+    action_buttons = ('export',)
 
     def extra_context(self):
         return {

@@ -1,6 +1,5 @@
 import logging
 
-from cacheops import invalidate_obj
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import post_save, post_delete, pre_delete
 from django.db import transaction
@@ -33,7 +32,6 @@ def rebuild_paths(obj):
         for cp in cable_paths:
             cp.delete()
             if cp.origin:
-                invalidate_obj(cp.origin)
                 create_cablepath(cp.origin)
 
 
@@ -146,14 +144,12 @@ def nullify_connected_endpoints(instance, **kwargs):
     # Disassociate the Cable from its termination points
     if instance.termination_a is not None:
         logger.debug(f"Nullifying termination A for cable {instance}")
-        instance.termination_a.cable = None
-        instance.termination_a._cable_peer = None
-        instance.termination_a.save()
+        model = instance.termination_a._meta.model
+        model.objects.filter(pk=instance.termination_a.pk).update(_cable_peer_type=None, _cable_peer_id=None)
     if instance.termination_b is not None:
         logger.debug(f"Nullifying termination B for cable {instance}")
-        instance.termination_b.cable = None
-        instance.termination_b._cable_peer = None
-        instance.termination_b.save()
+        model = instance.termination_b._meta.model
+        model.objects.filter(pk=instance.termination_b.pk).update(_cable_peer_type=None, _cable_peer_id=None)
 
     # Delete and retrace any dependent cable paths
     for cablepath in CablePath.objects.filter(path__contains=instance):

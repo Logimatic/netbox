@@ -1,16 +1,19 @@
 import datetime
 import json
 import re
+from typing import Dict, Any
 
 import yaml
 from django import template
 from django.conf import settings
+from django.template.defaultfilters import date
 from django.urls import NoReverseMatch, reverse
+from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.safestring import mark_safe
 from markdown import markdown
 
-from utilities.forms import TableConfigForm
+from utilities.forms import get_selected_values, TableConfigForm
 from utilities.utils import foreground_color
 
 register = template.Library()
@@ -130,11 +133,55 @@ def humanize_speed(speed):
 
 
 @register.filter()
+def humanize_megabytes(mb):
+    """
+    Express a number of megabytes in the most suitable unit (e.g. gigabytes or terabytes).
+    """
+    if not mb:
+        return ''
+    if mb >= 1048576:
+        return f'{int(mb / 1048576)} TB'
+    if mb >= 1024:
+        return f'{int(mb / 1024)} GB'
+    return f'{mb} MB'
+
+
+@register.filter()
 def tzoffset(value):
     """
     Returns the hour offset of a given time zone using the current time.
     """
     return datetime.datetime.now(value).strftime('%z')
+
+
+@register.filter(expects_localtime=True)
+def annotated_date(date_value):
+    """
+    Returns date as HTML span with short date format as the content and the
+    (long) date format as the title.
+    """
+    if not date_value:
+        return ''
+
+    if type(date_value) == datetime.date:
+        long_ts = date(date_value, 'DATE_FORMAT')
+        short_ts = date(date_value, 'SHORT_DATE_FORMAT')
+    else:
+        long_ts = date(date_value, 'DATETIME_FORMAT')
+        short_ts = date(date_value, 'SHORT_DATETIME_FORMAT')
+
+    span = f'<span title="{long_ts}">{short_ts}</span>'
+
+    return mark_safe(span)
+
+
+@register.simple_tag
+def annotated_now():
+    """
+    Returns the current date piped through the annotated_date filter.
+    """
+    tzinfo = timezone.get_current_timezone() if settings.USE_TZ else None
+    return annotated_date(datetime.datetime.now(tz=tzinfo))
 
 
 @register.filter()
@@ -228,6 +275,64 @@ def meters_to_feet(n):
     return float(n) * 3.28084
 
 
+@register.filter("startswith")
+def startswith(text: str, starts: str) -> bool:
+    """
+    Template implementation of `str.startswith()`.
+    """
+    if isinstance(text, str):
+        return text.startswith(starts)
+    return False
+
+
+@register.filter
+def get_key(value: Dict, arg: str) -> Any:
+    """
+    Template implementation of `dict.get()`, for accessing dict values
+    by key when the key is not able to be used in a template. For
+    example, `{"ui.colormode": "dark"}`.
+    """
+    return value.get(arg, None)
+
+
+@register.filter
+def get_item(value: object, attr: str) -> Any:
+    """
+    Template implementation of `__getitem__`, for accessing the `__getitem__` method
+    of a class from a template.
+    """
+    return value[attr]
+
+
+@register.filter
+def status_from_tag(tag: str = "info") -> str:
+    """
+    Determine Bootstrap theme status/level from Django's Message.level_tag.
+    """
+    status_map = {
+        'warning': 'warning',
+        'success': 'success',
+        'error': 'danger',
+        'debug': 'info',
+        'info': 'info',
+    }
+    return status_map.get(tag.lower(), 'info')
+
+
+@register.filter
+def icon_from_status(status: str = "info") -> str:
+    """
+    Determine icon class name from Bootstrap theme status/level.
+    """
+    icon_map = {
+        'warning': 'alert',
+        'success': 'check-circle',
+        'danger': 'alert',
+        'info': 'information',
+    }
+    return icon_map.get(status.lower(), 'information')
+
+
 #
 # Tags
 #
@@ -255,10 +360,17 @@ def utilization_graph(utilization, warning_threshold=75, danger_threshold=90):
     """
     Display a horizontal bar graph indicating a percentage of utilization.
     """
+    if danger_threshold and utilization >= danger_threshold:
+        bar_class = 'bg-danger'
+    elif warning_threshold and utilization >= warning_threshold:
+        bar_class = 'bg-warning'
+    elif warning_threshold or danger_threshold:
+        bar_class = 'bg-success'
+    else:
+        bar_class = 'bg-gray'
     return {
         'utilization': utilization,
-        'warning_threshold': warning_threshold,
-        'danger_threshold': danger_threshold,
+        'bar_class': bar_class,
     }
 
 
@@ -274,12 +386,13 @@ def tag(tag, url_name=None):
 
 
 @register.inclusion_tag('utilities/templatetags/badge.html')
-def badge(value, show_empty=False):
+def badge(value, bg_class='secondary', show_empty=False):
     """
     Display the specified number as a badge.
     """
     return {
         'value': value,
+        'bg_class': bg_class,
         'show_empty': show_empty,
     }
 
@@ -288,5 +401,34 @@ def badge(value, show_empty=False):
 def table_config_form(table, table_name=None):
     return {
         'table_name': table_name or table.__class__.__name__,
-        'table_config_form': TableConfigForm(table=table),
+        'form': TableConfigForm(table=table),
+    }
+
+
+@register.inclusion_tag('utilities/templatetags/applied_filters.html')
+def applied_filters(form, query_params):
+    """
+    Display the active filters for a given filter form.
+    """
+    form.is_valid()
+    querydict = query_params.copy()
+
+    applied_filters = []
+    for filter_name in form.changed_data:
+        if filter_name not in querydict:
+            continue
+
+        bound_field = form.fields[filter_name].get_bound_field(form, filter_name)
+        querydict.pop(filter_name)
+        display_value = ', '.join([str(v) for v in get_selected_values(form, filter_name)])
+
+        applied_filters.append({
+            'name': filter_name,
+            'value': form.cleaned_data[filter_name],
+            'link_url': f'?{querydict.urlencode()}',
+            'link_text': f'{bound_field.label}: {display_value}',
+        })
+
+    return {
+        'applied_filters': applied_filters,
     }

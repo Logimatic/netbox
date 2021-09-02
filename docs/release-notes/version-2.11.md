@@ -1,5 +1,164 @@
 # NetBox v2.11
 
+## v2.11.12 (2021-08-23)
+
+### Enhancements
+
+* [#6748](https://github.com/netbox-community/netbox/issues/6748) - Add site group filter to devices list
+* [#6790](https://github.com/netbox-community/netbox/issues/6790) - Recognize a /32 IPv4 address as a child of a /32 IPv4 prefix
+* [#6872](https://github.com/netbox-community/netbox/issues/6872) - Add table configuration button to child prefixes view
+* [#6929](https://github.com/netbox-community/netbox/issues/6929) - Introduce `LOGIN_PERSISTENCE` configuration parameter to persist user sessions
+* [#7011](https://github.com/netbox-community/netbox/issues/7011) - Add search field to VM interfaces filter form
+
+### Bug Fixes
+
+* [#5968](https://github.com/netbox-community/netbox/issues/5968) - Model forms should save empty custom field values as null
+* [#6326](https://github.com/netbox-community/netbox/issues/6326) - Enable filtering assigned VLANs by group in interface edit form
+* [#6686](https://github.com/netbox-community/netbox/issues/6686) - Force assignment of null custom field values to objects
+* [#6776](https://github.com/netbox-community/netbox/issues/6776) - Fix erroneous webhook dispatch on failure to save objects
+* [#6974](https://github.com/netbox-community/netbox/issues/6974) - Show contextual label for IP address role
+* [#7012](https://github.com/netbox-community/netbox/issues/7012) - Fix hidden "add components" dropdown on devices list
+
+---
+
+## v2.11.11 (2021-08-12)
+
+### Enhancements
+
+* [#6883](https://github.com/netbox-community/netbox/issues/6883) - Add C21 & C22 power types
+* [#6921](https://github.com/netbox-community/netbox/issues/6921) - Employ a sandbox when rendering Jinja2 code for increased security
+
+### Bug Fixes
+
+* [#6740](https://github.com/netbox-community/netbox/issues/6740) - Add import button to VM interfaces list
+* [#6892](https://github.com/netbox-community/netbox/issues/6892) - Fix validation of unit ranges when creating a rack reservation
+* [#6896](https://github.com/netbox-community/netbox/issues/6896) - Fix validation of IP address assigned as device/VM primary via NAT relation
+* [#6902](https://github.com/netbox-community/netbox/issues/6902) - Populate device field when cloning device components
+* [#6908](https://github.com/netbox-community/netbox/issues/6908) - Allow assignment of scope to VLAN groups upon import
+* [#6909](https://github.com/netbox-community/netbox/issues/6909) - Remove extraneous `site` column from VLAN group import form
+* [#6910](https://github.com/netbox-community/netbox/issues/6910) - Fix exception on invalid CSV import column name
+* [#6918](https://github.com/netbox-community/netbox/issues/6918) - Fix return URL persistence when adding multiple objects sequentially
+* [#6935](https://github.com/netbox-community/netbox/issues/6935) - Remove extraneous columns from inventory item and device bay tables
+* [#6936](https://github.com/netbox-community/netbox/issues/6936) - Add missing `parent` column to inventory item import form
+
+---
+
+## v2.11.10 (2021-07-28)
+
+### Enhancements
+
+* [#6560](https://github.com/netbox-community/netbox/issues/6560) - Enable CSV import via uploaded file
+* [#6644](https://github.com/netbox-community/netbox/issues/6644) - Add 6P/4P pass-through port types
+* [#6771](https://github.com/netbox-community/netbox/issues/6771) - Add count of inventory items to manufacturer view
+* [#6785](https://github.com/netbox-community/netbox/issues/6785) - Add "hardwired" type for power port types
+
+### Bug Fixes
+
+* [#5442](https://github.com/netbox-community/netbox/issues/5442) - Fix assignment of permissions based on LDAP groups
+* [#5627](https://github.com/netbox-community/netbox/issues/5627) - Fix filtering of interface connections list
+* [#6759](https://github.com/netbox-community/netbox/issues/6759) - Fix assignment of parent interfaces for bulk import
+* [#6773](https://github.com/netbox-community/netbox/issues/6773) - Add missing `display` field to rack unit serializer
+* [#6774](https://github.com/netbox-community/netbox/issues/6774) - Fix A/Z assignment when swapping circuit terminations
+* [#6777](https://github.com/netbox-community/netbox/issues/6777) - Fix default value validation for custom text fields
+* [#6778](https://github.com/netbox-community/netbox/issues/6778) - Rack reservation should display rack's location
+* [#6780](https://github.com/netbox-community/netbox/issues/6780) - Include rack location in navigation breadcrumbs
+* [#6794](https://github.com/netbox-community/netbox/issues/6794) - Fix device name display on device status view
+* [#6812](https://github.com/netbox-community/netbox/issues/6812) - Limit reported prefix utilization to 100%
+* [#6822](https://github.com/netbox-community/netbox/issues/6822) - Use consistent maximum value for interface MTU
+
+### Other Changes
+
+* [#6781](https://github.com/netbox-community/netbox/issues/6781) - Database query caching is now disabled by default
+
+---
+
+## v2.11.9 (2021-07-08)
+
+### Bug Fixes
+
+* [#6456](https://github.com/netbox-community/netbox/issues/6456) - API schema type should be boolean for `_occupied` on cable termination models
+* [#6710](https://github.com/netbox-community/netbox/issues/6710) - Fix assignment of VM interface parent via REST API
+* [#6714](https://github.com/netbox-community/netbox/issues/6714) - Fix rendering of device type component creation forms
+
+---
+
+## v2.11.8 (2021-07-06)
+
+### Enhancements
+
+* [#5503](https://github.com/netbox-community/netbox/issues/5503) - Annotate short date & time fields with their longer form
+* [#6138](https://github.com/netbox-community/netbox/issues/6138) - Add an `empty` filter modifier for character fields
+* [#6200](https://github.com/netbox-community/netbox/issues/6200) - Add rack reservations to global search
+* [#6368](https://github.com/netbox-community/netbox/issues/6368) - Enable virtual chassis assignment during bulk import of devices
+* [#6620](https://github.com/netbox-community/netbox/issues/6620) - Show assigned VMs count under device role view
+* [#6666](https://github.com/netbox-community/netbox/issues/6666) - Show management-only status under interface detail view
+* [#6667](https://github.com/netbox-community/netbox/issues/6667) - Display VM memory as GB/TB as appropriate
+
+### Bug Fixes
+
+* [#6626](https://github.com/netbox-community/netbox/issues/6626) - Fix site field on VM search form; add site group
+* [#6637](https://github.com/netbox-community/netbox/issues/6637) - Fix group assignment in "available VLANs" link under VLAN group view
+* [#6640](https://github.com/netbox-community/netbox/issues/6640) - Disallow numeric values in custom text fields
+* [#6652](https://github.com/netbox-community/netbox/issues/6652) - Fix exception when adding components in bulk to multiple devices
+* [#6676](https://github.com/netbox-community/netbox/issues/6676) - Fix device/VM counts per cluster under cluster type/group views
+* [#6680](https://github.com/netbox-community/netbox/issues/6680) - Allow setting custom field values for VM interfaces on initial creation
+* [#6695](https://github.com/netbox-community/netbox/issues/6695) - Fix exception when importing device type with invalid front port definition
+
+---
+
+## v2.11.7 (2021-06-16)
+
+### Enhancements
+
+* [#6455](https://github.com/netbox-community/netbox/issues/6455) - Permit /32 IPv4 and /128 IPv6 prefixes
+* [#6493](https://github.com/netbox-community/netbox/issues/6493) - Show change log diff for non-atomic (pre-2.11) changes
+* [#6564](https://github.com/netbox-community/netbox/issues/6564) - Add N connector type for pass-through ports
+* [#6588](https://github.com/netbox-community/netbox/issues/6588) - Add support for webp files as front/rear device type images
+* [#6589](https://github.com/netbox-community/netbox/issues/6589) - Standardize breadcrumb navigation for power panels and feeds
+
+### Bug Fixes
+
+* [#6553](https://github.com/netbox-community/netbox/issues/6553) - ProviderNetwork search should match on name
+* [#6562](https://github.com/netbox-community/netbox/issues/6562) - Disable ordering of secrets by assigned object
+* [#6563](https://github.com/netbox-community/netbox/issues/6563) - Fix filtering by location for cable connection forms
+* [#6584](https://github.com/netbox-community/netbox/issues/6584) - Fix ordering of nested inventory items
+* [#6602](https://github.com/netbox-community/netbox/issues/6602) - Fix deletion of devices with cables attached
+
+---
+
+## v2.11.6 (2021-06-04)
+
+### Bug Fixes
+
+* [#6544](https://github.com/netbox-community/netbox/issues/6544) - Fix migration error when upgrading with VRF(s) defined
+
+---
+
+## v2.11.5 (2021-06-04)
+
+**NOTE:** This release includes a database migration that calculates and annotates prefix depth. It may impose a noticeable delay on the upgrade process: Users should anticipate roughly one minute of delay per 100 thousand prefixes being updated.
+
+### Enhancements
+
+* [#6087](https://github.com/netbox-community/netbox/issues/6087) - Improved prefix hierarchy rendering
+* [#6487](https://github.com/netbox-community/netbox/issues/6487) - Add location filter to cable connection form
+* [#6501](https://github.com/netbox-community/netbox/issues/6501) - Expose prefix depth and children on REST API serializer
+* [#6527](https://github.com/netbox-community/netbox/issues/6527) - Support Markdown for report descriptions
+* [#6540](https://github.com/netbox-community/netbox/issues/6540) - Add a "flat" column to the prefix table
+
+### Bug Fixes
+
+* [#6064](https://github.com/netbox-community/netbox/issues/6064) - Fix object permission assignments for user and group models
+* [#6217](https://github.com/netbox-community/netbox/issues/6217) - Disallow passing of string values for integer custom fields
+* [#6284](https://github.com/netbox-community/netbox/issues/6284) - Avoid sending redundant webhooks when adding/removing tags
+* [#6492](https://github.com/netbox-community/netbox/issues/6492) - Correct tag population in post-change data resulting from REST API changes
+* [#6496](https://github.com/netbox-community/netbox/issues/6496) - Fix upgrade script when Python installed in nonstandard path
+* [#6502](https://github.com/netbox-community/netbox/issues/6502) - Correct permissions evaluation for running a report via the REST API
+* [#6517](https://github.com/netbox-community/netbox/issues/6517) - Fix assignment of user when creating rack reservations via REST API
+* [#6525](https://github.com/netbox-community/netbox/issues/6525) - Paginate related IPs table under IP address view
+
+---
+
 ## v2.11.4 (2021-05-25)
 
 ### Enhancements
@@ -93,7 +252,7 @@
 
 ## v2.11.0 (2021-04-16)
 
-**Note:** NetBox v2.11 is the last major release that will support Python 3.6. Beginning with NetBox v2.12, Python 3.7 or later will be required.
+**Note:** NetBox v2.11 is the last major release that will support Python 3.6. Beginning with NetBox v3.0, Python 3.7 or later will be required.
 
 ### Breaking Changes
 
@@ -151,7 +310,7 @@ Devices can now be assigned to locations (formerly known as rack groups) within 
 
 When exporting a list of objects in NetBox, users now have the option of selecting the "current view". This will render CSV output matching the current configuration of the table being viewed. For example, if you modify the sites list to display only the site name, tenant, and status, the rendered CSV will include only these columns, and they will appear in the order chosen.
 
-The legacy static export behavior has been retained to ensure backward compatibility for dependent integrations. However, users are strongly encouraged to adapt custom export templates where needed as this functionality will be removed in v2.12.
+The legacy static export behavior has been retained to ensure backward compatibility for dependent integrations. However, users are strongly encouraged to adapt custom export templates where needed as this functionality will be removed in v3.0.
 
 #### Variable Scope Support for VLAN Groups ([#5284](https://github.com/netbox-community/netbox/issues/5284))
 

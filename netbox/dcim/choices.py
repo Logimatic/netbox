@@ -169,7 +169,7 @@ class DeviceStatusChoices(ChoiceSet):
         STATUS_PLANNED: 'info',
         STATUS_STAGED: 'primary',
         STATUS_FAILED: 'danger',
-        STATUS_INVENTORY: 'default',
+        STATUS_INVENTORY: 'secondary',
         STATUS_DECOMMISSIONING: 'warning',
     }
 
@@ -252,6 +252,7 @@ class PowerPortTypeChoices(ChoiceSet):
     TYPE_IEC_C14 = 'iec-60320-c14'
     TYPE_IEC_C16 = 'iec-60320-c16'
     TYPE_IEC_C20 = 'iec-60320-c20'
+    TYPE_IEC_C22 = 'iec-60320-c22'
     # IEC 60309
     TYPE_IEC_PNE4H = 'iec-60309-p-n-e-4h'
     TYPE_IEC_PNE6H = 'iec-60309-p-n-e-6h'
@@ -341,6 +342,8 @@ class PowerPortTypeChoices(ChoiceSet):
     TYPE_DC = 'dc-terminal'
     # Proprietary
     TYPE_SAF_D_GRID = 'saf-d-grid'
+    # Other
+    TYPE_HARDWIRED = 'hardwired'
 
     CHOICES = (
         ('IEC 60320', (
@@ -349,6 +352,7 @@ class PowerPortTypeChoices(ChoiceSet):
             (TYPE_IEC_C14, 'C14'),
             (TYPE_IEC_C16, 'C16'),
             (TYPE_IEC_C20, 'C20'),
+            (TYPE_IEC_C22, 'C22'),
         )),
         ('IEC 60309', (
             (TYPE_IEC_PNE4H, 'P+N+E 4H'),
@@ -447,6 +451,9 @@ class PowerPortTypeChoices(ChoiceSet):
         ('Proprietary', (
             (TYPE_SAF_D_GRID, 'Saf-D-Grid'),
         )),
+        ('Other', (
+            (TYPE_HARDWIRED, 'Hardwired'),
+        )),
     )
 
 
@@ -462,6 +469,7 @@ class PowerOutletTypeChoices(ChoiceSet):
     TYPE_IEC_C13 = 'iec-60320-c13'
     TYPE_IEC_C15 = 'iec-60320-c15'
     TYPE_IEC_C19 = 'iec-60320-c19'
+    TYPE_IEC_C21 = 'iec-60320-c21'
     # IEC 60309
     TYPE_IEC_PNE4H = 'iec-60309-p-n-e-4h'
     TYPE_IEC_PNE6H = 'iec-60309-p-n-e-6h'
@@ -545,6 +553,8 @@ class PowerOutletTypeChoices(ChoiceSet):
     # Proprietary
     TYPE_HDOT_CX = 'hdot-cx'
     TYPE_SAF_D_GRID = 'saf-d-grid'
+    # Other
+    TYPE_HARDWIRED = 'hardwired'
 
     CHOICES = (
         ('IEC 60320', (
@@ -553,6 +563,7 @@ class PowerOutletTypeChoices(ChoiceSet):
             (TYPE_IEC_C13, 'C13'),
             (TYPE_IEC_C15, 'C15'),
             (TYPE_IEC_C19, 'C19'),
+            (TYPE_IEC_C21, 'C21'),
         )),
         ('IEC 60309', (
             (TYPE_IEC_PNE4H, 'P+N+E 4H'),
@@ -644,6 +655,9 @@ class PowerOutletTypeChoices(ChoiceSet):
         ('Proprietary', (
             (TYPE_HDOT_CX, 'HDOT Cx'),
             (TYPE_SAF_D_GRID, 'Saf-D-Grid'),
+        )),
+        ('Other', (
+            (TYPE_HARDWIRED, 'Hardwired'),
         )),
     )
 
@@ -917,6 +931,11 @@ class PortTypeChoices(ChoiceSet):
     TYPE_8P6C = '8p6c'
     TYPE_8P4C = '8p4c'
     TYPE_8P2C = '8p2c'
+    TYPE_6P6C = '6p6c'
+    TYPE_6P4C = '6p4c'
+    TYPE_6P2C = '6p2c'
+    TYPE_4P4C = '4p4c'
+    TYPE_4P2C = '4p2c'
     TYPE_GG45 = 'gg45'
     TYPE_TERA4P = 'tera-4p'
     TYPE_TERA2P = 'tera-2p'
@@ -924,6 +943,7 @@ class PortTypeChoices(ChoiceSet):
     TYPE_110_PUNCH = '110-punch'
     TYPE_BNC = 'bnc'
     TYPE_F = 'f'
+    TYPE_N = 'n'
     TYPE_MRJ21 = 'mrj21'
     TYPE_ST = 'st'
     TYPE_SC = 'sc'
@@ -947,6 +967,11 @@ class PortTypeChoices(ChoiceSet):
                 (TYPE_8P6C, '8P6C'),
                 (TYPE_8P4C, '8P4C'),
                 (TYPE_8P2C, '8P2C'),
+                (TYPE_6P6C, '6P6C'),
+                (TYPE_6P4C, '6P4C'),
+                (TYPE_6P2C, '6P2C'),
+                (TYPE_4P4C, '4P4C'),
+                (TYPE_4P2C, '4P2C'),
                 (TYPE_GG45, 'GG45'),
                 (TYPE_TERA4P, 'TERA 4P'),
                 (TYPE_TERA2P, 'TERA 2P'),
@@ -954,6 +979,7 @@ class PortTypeChoices(ChoiceSet):
                 (TYPE_110_PUNCH, '110 Punch'),
                 (TYPE_BNC, 'BNC'),
                 (TYPE_F, 'F Connector'),
+                (TYPE_N, 'N Connector'),
                 (TYPE_MRJ21, 'MRJ21'),
             ),
         ),
@@ -1112,14 +1138,21 @@ class CableStatusChoices(ChoiceSet):
 
 class CableLengthUnitChoices(ChoiceSet):
 
+    # Metric
+    UNIT_KILOMETER = 'km'
     UNIT_METER = 'm'
     UNIT_CENTIMETER = 'cm'
+
+    # Imperial
+    UNIT_MILE = 'mi'
     UNIT_FOOT = 'ft'
     UNIT_INCH = 'in'
 
     CHOICES = (
+        (UNIT_KILOMETER, 'Kilometers'),
         (UNIT_METER, 'Meters'),
         (UNIT_CENTIMETER, 'Centimeters'),
+        (UNIT_MILE, 'Miles'),
         (UNIT_FOOT, 'Feet'),
         (UNIT_INCH, 'Inches'),
     )

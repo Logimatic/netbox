@@ -10,9 +10,10 @@ from mptt.models import MPTTModel, TreeForeignKey
 from dcim.choices import *
 from dcim.constants import *
 from dcim.fields import MACAddressField
+from dcim.svg import CableTraceSVG
 from extras.utils import extras_features
 from netbox.models import PrimaryModel
-from utilities.fields import NaturalOrderingField
+from utilities.fields import ColorField, NaturalOrderingField
 from utilities.mptt import TreeManager
 from utilities.ordering import naturalize_interface
 from utilities.querysets import RestrictedQuerySet
@@ -193,6 +194,13 @@ class PathEndpoint(models.Model):
         # Return the path as a list of three-tuples (A termination, cable, B termination)
         return list(zip(*[iter(path)] * 3))
 
+    def get_trace_svg(self, base_url=None, width=None):
+        if width is not None:
+            trace = CableTraceSVG(self, base_url=base_url, width=width)
+        else:
+            trace = CableTraceSVG(self, base_url=base_url)
+        return trace.render()
+
     @property
     def path(self):
         return self._path
@@ -229,7 +237,7 @@ class ConsolePort(ComponentModel, CableTermination, PathEndpoint):
         help_text='Port speed in bits per second'
     )
 
-    csv_headers = ['device', 'name', 'label', 'type', 'speed', 'mark_connected', 'description']
+    clone_fields = ['device', 'type', 'speed']
 
     class Meta:
         ordering = ('device', '_name')
@@ -237,17 +245,6 @@ class ConsolePort(ComponentModel, CableTermination, PathEndpoint):
 
     def get_absolute_url(self):
         return reverse('dcim:consoleport', kwargs={'pk': self.pk})
-
-    def to_csv(self):
-        return (
-            self.device.identifier,
-            self.name,
-            self.label,
-            self.type,
-            self.speed,
-            self.mark_connected,
-            self.description,
-        )
 
 
 #
@@ -272,7 +269,7 @@ class ConsoleServerPort(ComponentModel, CableTermination, PathEndpoint):
         help_text='Port speed in bits per second'
     )
 
-    csv_headers = ['device', 'name', 'label', 'type', 'speed', 'mark_connected', 'description']
+    clone_fields = ['device', 'type', 'speed']
 
     class Meta:
         ordering = ('device', '_name')
@@ -280,17 +277,6 @@ class ConsoleServerPort(ComponentModel, CableTermination, PathEndpoint):
 
     def get_absolute_url(self):
         return reverse('dcim:consoleserverport', kwargs={'pk': self.pk})
-
-    def to_csv(self):
-        return (
-            self.device.identifier,
-            self.name,
-            self.label,
-            self.type,
-            self.speed,
-            self.mark_connected,
-            self.description,
-        )
 
 
 #
@@ -321,9 +307,7 @@ class PowerPort(ComponentModel, CableTermination, PathEndpoint):
         help_text="Allocated power draw (watts)"
     )
 
-    csv_headers = [
-        'device', 'name', 'label', 'type', 'mark_connected', 'maximum_draw', 'allocated_draw', 'description',
-    ]
+    clone_fields = ['device', 'maximum_draw', 'allocated_draw']
 
     class Meta:
         ordering = ('device', '_name')
@@ -331,18 +315,6 @@ class PowerPort(ComponentModel, CableTermination, PathEndpoint):
 
     def get_absolute_url(self):
         return reverse('dcim:powerport', kwargs={'pk': self.pk})
-
-    def to_csv(self):
-        return (
-            self.device.identifier,
-            self.name,
-            self.label,
-            self.get_type_display(),
-            self.mark_connected,
-            self.maximum_draw,
-            self.allocated_draw,
-            self.description,
-        )
 
     def clean(self):
         super().clean()
@@ -433,7 +405,7 @@ class PowerOutlet(ComponentModel, CableTermination, PathEndpoint):
         help_text="Phase (for three-phase feeds)"
     )
 
-    csv_headers = ['device', 'name', 'label', 'type', 'mark_connected', 'power_port', 'feed_leg', 'description']
+    clone_fields = ['device', 'type', 'power_port', 'feed_leg']
 
     class Meta:
         ordering = ('device', '_name')
@@ -441,18 +413,6 @@ class PowerOutlet(ComponentModel, CableTermination, PathEndpoint):
 
     def get_absolute_url(self):
         return reverse('dcim:poweroutlet', kwargs={'pk': self.pk})
-
-    def to_csv(self):
-        return (
-            self.device.identifier,
-            self.name,
-            self.label,
-            self.get_type_display(),
-            self.mark_connected,
-            self.power_port.name if self.power_port else None,
-            self.get_feed_leg_display(),
-            self.description,
-        )
 
     def clean(self):
         super().clean()
@@ -483,7 +443,10 @@ class BaseInterface(models.Model):
     mtu = models.PositiveIntegerField(
         blank=True,
         null=True,
-        validators=[MinValueValidator(1), MaxValueValidator(65536)],
+        validators=[
+            MinValueValidator(INTERFACE_MTU_MIN),
+            MaxValueValidator(INTERFACE_MTU_MAX)
+        ],
         verbose_name='MTU'
     )
     mode = models.CharField(
@@ -570,10 +533,7 @@ class Interface(ComponentModel, BaseInterface, CableTermination, PathEndpoint):
         related_query_name='interface'
     )
 
-    csv_headers = [
-        'device', 'name', 'label', 'parent', 'lag', 'type', 'enabled', 'mark_connected', 'mac_address', 'mtu',
-        'mgmt_only', 'description', 'mode',
-    ]
+    clone_fields = ['device', 'parent', 'lag', 'type', 'mgmt_only']
 
     class Meta:
         ordering = ('device', CollateAsChar('_name'))
@@ -581,23 +541,6 @@ class Interface(ComponentModel, BaseInterface, CableTermination, PathEndpoint):
 
     def get_absolute_url(self):
         return reverse('dcim:interface', kwargs={'pk': self.pk})
-
-    def to_csv(self):
-        return (
-            self.device.identifier if self.device else None,
-            self.name,
-            self.label,
-            self.parent.name if self.parent else None,
-            self.lag.name if self.lag else None,
-            self.get_type_display(),
-            self.enabled,
-            self.mark_connected,
-            self.mac_address,
-            self.mtu,
-            self.mgmt_only,
-            self.description,
-            self.get_mode_display(),
-        )
 
     def clean(self):
         super().clean()
@@ -692,6 +635,9 @@ class FrontPort(ComponentModel, CableTermination):
         max_length=50,
         choices=PortTypeChoices
     )
+    color = ColorField(
+        blank=True
+    )
     rear_port = models.ForeignKey(
         to='dcim.RearPort',
         on_delete=models.CASCADE,
@@ -705,9 +651,7 @@ class FrontPort(ComponentModel, CableTermination):
         ]
     )
 
-    csv_headers = [
-        'device', 'name', 'label', 'type', 'mark_connected', 'rear_port', 'rear_port_position', 'description',
-    ]
+    clone_fields = ['device', 'type']
 
     class Meta:
         ordering = ('device', '_name')
@@ -718,18 +662,6 @@ class FrontPort(ComponentModel, CableTermination):
 
     def get_absolute_url(self):
         return reverse('dcim:frontport', kwargs={'pk': self.pk})
-
-    def to_csv(self):
-        return (
-            self.device.identifier,
-            self.name,
-            self.label,
-            self.get_type_display(),
-            self.mark_connected,
-            self.rear_port.name,
-            self.rear_port_position,
-            self.description,
-        )
 
     def clean(self):
         super().clean()
@@ -757,6 +689,9 @@ class RearPort(ComponentModel, CableTermination):
         max_length=50,
         choices=PortTypeChoices
     )
+    color = ColorField(
+        blank=True
+    )
     positions = models.PositiveSmallIntegerField(
         default=1,
         validators=[
@@ -764,8 +699,7 @@ class RearPort(ComponentModel, CableTermination):
             MaxValueValidator(REARPORT_POSITIONS_MAX)
         ]
     )
-
-    csv_headers = ['device', 'name', 'label', 'type', 'mark_connected', 'positions', 'description']
+    clone_fields = ['device', 'type', 'positions']
 
     class Meta:
         ordering = ('device', '_name')
@@ -785,17 +719,6 @@ class RearPort(ComponentModel, CableTermination):
                              f"({frontport_count})"
             })
 
-    def to_csv(self):
-        return (
-            self.device.identifier,
-            self.name,
-            self.label,
-            self.get_type_display(),
-            self.mark_connected,
-            self.positions,
-            self.description,
-        )
-
 
 #
 # Device bays
@@ -814,7 +737,7 @@ class DeviceBay(ComponentModel):
         null=True
     )
 
-    csv_headers = ['device', 'name', 'label', 'installed_device', 'description']
+    clone_fields = ['device']
 
     class Meta:
         ordering = ('device', '_name')
@@ -822,15 +745,6 @@ class DeviceBay(ComponentModel):
 
     def get_absolute_url(self):
         return reverse('dcim:devicebay', kwargs={'pk': self.pk})
-
-    def to_csv(self):
-        return (
-            self.device.identifier,
-            self.name,
-            self.label,
-            self.installed_device.identifier if self.installed_device else None,
-            self.description,
-        )
 
     def clean(self):
         super().clean()
@@ -907,9 +821,7 @@ class InventoryItem(MPTTModel, ComponentModel):
 
     objects = TreeManager()
 
-    csv_headers = [
-        'device', 'name', 'label', 'manufacturer', 'part_id', 'serial', 'asset_tag', 'discovered', 'description',
-    ]
+    clone_fields = ['device', 'parent', 'manufacturer', 'part_id']
 
     class Meta:
         ordering = ('device__id', 'parent__id', '_name')
@@ -917,16 +829,3 @@ class InventoryItem(MPTTModel, ComponentModel):
 
     def get_absolute_url(self):
         return reverse('dcim:inventoryitem', kwargs={'pk': self.pk})
-
-    def to_csv(self):
-        return (
-            self.device.name or '{{{}}}'.format(self.device.pk),
-            self.name,
-            self.label,
-            self.manufacturer.name if self.manufacturer else None,
-            self.part_id,
-            self.serial,
-            self.asset_tag,
-            self.discovered,
-            self.description,
-        )

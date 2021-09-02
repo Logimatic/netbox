@@ -4,7 +4,7 @@ from netaddr import IPNetwork
 
 from dcim.models import Device, DeviceRole, DeviceType, Manufacturer, Site
 from ipam.choices import *
-from ipam.models import Aggregate, IPAddress, Prefix, RIR, Role, RouteTarget, Service, VLAN, VLANGroup, VRF
+from ipam.models import *
 from tenancy.models import Tenant
 from utilities.testing import ViewTestCases, create_tags
 
@@ -259,6 +259,64 @@ class PrefixTestCase(ViewTestCases.PrimaryObjectViewTestCase):
         }
 
 
+class IPRangeTestCase(ViewTestCases.PrimaryObjectViewTestCase):
+    model = IPRange
+
+    @classmethod
+    def setUpTestData(cls):
+
+        vrfs = (
+            VRF(name='VRF 1', rd='65000:1'),
+            VRF(name='VRF 2', rd='65000:2'),
+        )
+        VRF.objects.bulk_create(vrfs)
+
+        roles = (
+            Role(name='Role 1', slug='role-1'),
+            Role(name='Role 2', slug='role-2'),
+        )
+        Role.objects.bulk_create(roles)
+
+        ip_ranges = (
+            IPRange(start_address='192.168.0.10/24', end_address='192.168.0.100/24', size=91),
+            IPRange(start_address='192.168.1.10/24', end_address='192.168.1.100/24', size=91),
+            IPRange(start_address='192.168.2.10/24', end_address='192.168.2.100/24', size=91),
+            IPRange(start_address='192.168.3.10/24', end_address='192.168.3.100/24', size=91),
+            IPRange(start_address='192.168.4.10/24', end_address='192.168.4.100/24', size=91),
+        )
+        IPRange.objects.bulk_create(ip_ranges)
+
+        tags = create_tags('Alpha', 'Bravo', 'Charlie')
+
+        cls.form_data = {
+            'start_address': IPNetwork('192.0.5.10/24'),
+            'end_address': IPNetwork('192.0.5.100/24'),
+            'vrf': vrfs[1].pk,
+            'tenant': None,
+            'vlan': None,
+            'status': IPRangeStatusChoices.STATUS_RESERVED,
+            'role': roles[1].pk,
+            'is_pool': True,
+            'description': 'A new IP range',
+            'tags': [t.pk for t in tags],
+        }
+
+        cls.csv_data = (
+            "vrf,start_address,end_address,status",
+            "VRF 1,10.1.0.1/16,10.1.9.254/16,active",
+            "VRF 1,10.2.0.1/16,10.2.9.254/16,active",
+            "VRF 1,10.3.0.1/16,10.3.9.254/16,active",
+        )
+
+        cls.bulk_edit_data = {
+            'vrf': vrfs[1].pk,
+            'tenant': None,
+            'status': IPRangeStatusChoices.STATUS_RESERVED,
+            'role': roles[1].pk,
+            'description': 'New description',
+        }
+
+
 class IPAddressTestCase(ViewTestCases.PrimaryObjectViewTestCase):
     model = IPAddress
 
@@ -333,10 +391,10 @@ class VLANGroupTestCase(ViewTestCases.OrganizationalObjectViewTestCase):
         }
 
         cls.csv_data = (
-            "name,slug,description",
-            "VLAN Group 4,vlan-group-4,Fourth VLAN group",
-            "VLAN Group 5,vlan-group-5,Fifth VLAN group",
-            "VLAN Group 6,vlan-group-6,Sixth VLAN group",
+            f"name,slug,scope_type,scope_id,description",
+            f"VLAN Group 4,vlan-group-4,,,Fourth VLAN group",
+            f"VLAN Group 5,vlan-group-5,dcim.site,{sites[0].pk},Fifth VLAN group",
+            f"VLAN Group 6,vlan-group-6,dcim.site,{sites[1].pk},Sixth VLAN group",
         )
 
         cls.bulk_edit_data = {

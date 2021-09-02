@@ -6,13 +6,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator, ValidationError
 from django.db import models
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 from extras.choices import *
-from extras.utils import FeatureQuery
-from netbox.models import BigIDModel
+from extras.utils import FeatureQuery, extras_features
+from netbox.models import ChangeLoggedModel
 from utilities.forms import (
-    CSVChoiceField, DatePicker, LaxURLField, StaticSelect2Multiple, StaticSelect2, add_blank_choice,
+    CSVChoiceField, DatePicker, LaxURLField, StaticSelectMultiple, StaticSelect, add_blank_choice,
 )
 from utilities.querysets import RestrictedQuerySet
 from utilities.validators import validate_regex
@@ -29,11 +30,11 @@ class CustomFieldManager(models.Manager.from_queryset(RestrictedQuerySet)):
         return self.get_queryset().filter(content_types=content_type)
 
 
-class CustomField(BigIDModel):
+@extras_features('webhooks')
+class CustomField(ChangeLoggedModel):
     content_types = models.ManyToManyField(
         to=ContentType,
         related_name='custom_fields',
-        verbose_name='Object(s)',
         limit_choices_to=FeatureQuery('custom_fields'),
         help_text='The object(s) to which this field applies.'
     )
@@ -114,11 +115,38 @@ class CustomField(BigIDModel):
     def __str__(self):
         return self.label or self.name.replace('_', ' ').capitalize()
 
+    def get_absolute_url(self):
+        return reverse('extras:customfield', args=[self.pk])
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Cache instance's original name so we can check later whether it has changed
         self._name = self.name
+
+    def populate_initial_data(self, content_types):
+        """
+        Populate initial custom field data upon either a) the creation of a new CustomField, or
+        b) the assignment of an existing CustomField to new object types.
+        """
+        for ct in content_types:
+            model = ct.model_class()
+            instances = model.objects.exclude(**{f'custom_field_data__contains': self.name})
+            for instance in instances:
+                instance.custom_field_data[self.name] = self.default
+            model.objects.bulk_update(instances, ['custom_field_data'], batch_size=100)
+
+    def remove_stale_data(self, content_types):
+        """
+        Delete custom field data which is no longer relevant (either because the CustomField is
+        no longer assigned to a model, or because it has been deleted).
+        """
+        for ct in content_types:
+            model = ct.model_class()
+            instances = model.objects.filter(**{f'custom_field_data__{self.name}__isnull': False})
+            for instance in instances:
+                del(instance.custom_field_data[self.name])
+            model.objects.bulk_update(instances, ['custom_field_data'], batch_size=100)
 
     def rename_object_data(self, old_name, new_name):
         """
@@ -132,24 +160,14 @@ class CustomField(BigIDModel):
                 instance.custom_field_data[new_name] = instance.custom_field_data.pop(old_name)
             model.objects.bulk_update(instances, ['custom_field_data'], batch_size=100)
 
-    def remove_stale_data(self, content_types):
-        """
-        Delete custom field data which is no longer relevant (either because the CustomField is
-        no longer assigned to a model, or because it has been deleted).
-        """
-        for ct in content_types:
-            model = ct.model_class()
-            for obj in model.objects.filter(**{f'custom_field_data__{self.name}__isnull': False}):
-                del(obj.custom_field_data[self.name])
-                obj.save()
-
     def clean(self):
         super().clean()
 
         # Validate the field's default value (if any)
         if self.default is not None:
             try:
-                self.validate(self.default)
+                default_value = str(self.default) if self.type == CustomFieldTypeChoices.TYPE_TEXT else self.default
+                self.validate(default_value)
             except ValidationError as err:
                 raise ValidationError({
                     'default': f'Invalid default value "{self.default}": {err.message}'
@@ -221,7 +239,7 @@ class CustomField(BigIDModel):
                 (False, 'False'),
             )
             field = forms.NullBooleanField(
-                required=required, initial=initial, widget=StaticSelect2(choices=choices)
+                required=required, initial=initial, widget=StaticSelect(choices=choices)
             )
 
         # Date
@@ -243,12 +261,12 @@ class CustomField(BigIDModel):
             if self.type == CustomFieldTypeChoices.TYPE_SELECT:
                 field_class = CSVChoiceField if for_csv_import else forms.ChoiceField
                 field = field_class(
-                    choices=choices, required=required, initial=initial, widget=StaticSelect2()
+                    choices=choices, required=required, initial=initial, widget=StaticSelect()
                 )
             else:
                 field_class = CSVChoiceField if for_csv_import else forms.MultipleChoiceField
                 field = field_class(
-                    choices=choices, required=required, initial=initial, widget=StaticSelect2Multiple()
+                    choices=choices, required=required, initial=initial, widget=StaticSelectMultiple()
                 )
 
         # URL
@@ -280,15 +298,15 @@ class CustomField(BigIDModel):
         if value not in [None, '']:
 
             # Validate text field
-            if self.type == CustomFieldTypeChoices.TYPE_TEXT and self.validation_regex:
-                if not re.match(self.validation_regex, value):
+            if self.type == CustomFieldTypeChoices.TYPE_TEXT:
+                if type(value) is not str:
+                    raise ValidationError(f"Value must be a string.")
+                if self.validation_regex and not re.match(self.validation_regex, value):
                     raise ValidationError(f"Value must match regex '{self.validation_regex}'")
 
             # Validate integer
             if self.type == CustomFieldTypeChoices.TYPE_INTEGER:
-                try:
-                    int(value)
-                except ValueError:
+                if type(value) is not int:
                     raise ValidationError("Value must be an integer.")
                 if self.validation_minimum is not None and value < self.validation_minimum:
                     raise ValidationError(f"Value must be at least {self.validation_minimum}")

@@ -8,7 +8,7 @@ There are several official forums for communication among the developers and com
 
 * [GitHub issues](https://github.com/netbox-community/netbox/issues) - All feature requests, bug reports, and other substantial changes to the code base **must** be documented in an issue.
 * [GitHub Discussions](https://github.com/netbox-community/netbox/discussions) - The preferred forum for general discussion and support issues. Ideal for shaping a feature request prior to submitting an issue.
-* [#netbox on NetDev Community Slack](https://slack.netbox.dev/) - Good for quick chats. Avoid any discussion that might need to be referenced later on, as the chat history is not retained long.
+* [#netbox on NetDev Community Slack](https://netdev.chat/) - Good for quick chats. Avoid any discussion that might need to be referenced later on, as the chat history is not retained long.
 * [Google Group](https://groups.google.com/g/netbox-discuss) - Legacy mailing list; slowly being phased out in favor of GitHub discussions.
 
 ## Governance
@@ -25,7 +25,6 @@ NetBox components are arranged into functional subsections called _apps_ (a carr
 * `dcim`: Datacenter infrastructure management (sites, racks, and devices)
 * `extras`: Additional features not considered part of the core data model
 * `ipam`: IP address management (VRFs, prefixes, IP addresses, and VLANs)
-* `secrets`: Encrypted storage of sensitive data (e.g. login credentials)
 * `tenancy`: Tenants (such as customers) to which NetBox objects may be assigned
 * `users`: Authentication and user preferences
 * `utilities`: Resources which are not user-facing (extendable classes, etc.)
