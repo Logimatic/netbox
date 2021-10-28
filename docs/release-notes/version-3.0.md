@@ -1,5 +1,169 @@
 # NetBox v3.0
 
+## v3.0.8 (2021-10-20)
+
+### Enhancements
+
+* [#7551](https://github.com/netbox-community/netbox/issues/7551) - Add UI field to filter interfaces by kind
+* [#7561](https://github.com/netbox-community/netbox/issues/7561) - Add a utilization column to the IP ranges table
+
+### Bug Fixes
+
+* [#7300](https://github.com/netbox-community/netbox/issues/7300) - Fix incorrect Device LLDP interface row coloring
+* [#7495](https://github.com/netbox-community/netbox/issues/7495) - Fix navigation UI issue that caused improper element overlap
+* [#7529](https://github.com/netbox-community/netbox/issues/7529) - Restore horizontal scrolling for tables in narrow viewports
+* [#7534](https://github.com/netbox-community/netbox/issues/7534) - Avoid exception when utilizing "create and add another" twice in succession
+* [#7544](https://github.com/netbox-community/netbox/issues/7544) - Fix multi-value filtering of custom field objects
+* [#7545](https://github.com/netbox-community/netbox/issues/7545) - Fix incorrect display of update/delete events for webhooks
+* [#7550](https://github.com/netbox-community/netbox/issues/7550) - Fix rendering of UTF8-encoded data in change records
+* [#7556](https://github.com/netbox-community/netbox/issues/7556) - Fix display of version when new release is available
+* [#7584](https://github.com/netbox-community/netbox/issues/7584) - Fix alignment of object identifier under object view
+
+---
+
+## v3.0.7 (2021-10-08)
+
+### Enhancements
+
+* [#6879](https://github.com/netbox-community/netbox/issues/6879) - Improve ability to toggle images/labels in rack elevations 
+* [#7485](https://github.com/netbox-community/netbox/issues/7485) - Add USB micro AB type
+
+### Bug Fixes
+
+* [#7051](https://github.com/netbox-community/netbox/issues/7051) - Fix permissions evaluation and improve error handling for connected device REST API endpoint
+* [#7471](https://github.com/netbox-community/netbox/issues/7471) - Correct redirect URL when attaching images via "add another" button
+* [#7474](https://github.com/netbox-community/netbox/issues/7474) - Fix AttributeError exception when rendering a report or custom script
+* [#7479](https://github.com/netbox-community/netbox/issues/7479) - Fix parent interface choices when bulk editing VM interfaces
+
+---
+
+## v3.0.6 (2021-10-06)
+
+### Enhancements
+
+* [#6850](https://github.com/netbox-community/netbox/issues/6850) - Default to current user when creating journal entries via REST API
+* [#6955](https://github.com/netbox-community/netbox/issues/6955) - Include type, ID, and slug on object view
+* [#7394](https://github.com/netbox-community/netbox/issues/7394) - Enable filtering cables by termination type & ID in REST API
+* [#7462](https://github.com/netbox-community/netbox/issues/7462) - Include count of assigned virtual machines under platform view
+
+### Bug Fixes
+
+* [#7442](https://github.com/netbox-community/netbox/issues/7442) - Fix missing actions column on user-configured tables
+* [#7446](https://github.com/netbox-community/netbox/issues/7446) - Fix exception when viewing a large number of child IPs within a prefix
+* [#7455](https://github.com/netbox-community/netbox/issues/7455) - Fix site/provider network validation for circuit termination API serializer
+* [#7459](https://github.com/netbox-community/netbox/issues/7459) - Pre-populate location data when adding a device to a rack
+* [#7460](https://github.com/netbox-community/netbox/issues/7460) - Fix filtering connections by site ID
+
+---
+
+## v3.0.5 (2021-10-04)
+
+### Enhancements
+
+* [#5925](https://github.com/netbox-community/netbox/issues/5925) - Always show IP addresses tab under prefix view
+* [#6423](https://github.com/netbox-community/netbox/issues/6423) - Cache rendered REST API specifications
+* [#6708](https://github.com/netbox-community/netbox/issues/6708) - Add image attachment support for circuits, power panels
+* [#7387](https://github.com/netbox-community/netbox/issues/7387) - Enable arbitrary ordering of custom scripts
+
+### Bug Fixes
+
+* [#6433](https://github.com/netbox-community/netbox/issues/6433) - Fix bulk editing of child prefixes under aggregate view
+* [#6817](https://github.com/netbox-community/netbox/issues/6817) - Custom field columns should be removed from tables upon their deletion
+* [#6895](https://github.com/netbox-community/netbox/issues/6895) - Remove errant markup for null values in CSV export
+* [#7215](https://github.com/netbox-community/netbox/issues/7215) - Prevent rack elevations from overlapping when higher width is specified
+* [#7373](https://github.com/netbox-community/netbox/issues/7373) - Fix flashing when server, client, and browser color-mode preferences are mismatched
+* [#7397](https://github.com/netbox-community/netbox/issues/7397) - Fix AttributeError exception when rendering export template for devices via REST API
+* [#7401](https://github.com/netbox-community/netbox/issues/7401) - Pin `jsonschema` package to v3.2.0 to fix REST API docs rendering
+* [#7411](https://github.com/netbox-community/netbox/issues/7411) - Fix exception in UI when adding member devices to virtual chassis
+* [#7412](https://github.com/netbox-community/netbox/issues/7412) - Fix exception in UI when adding child device to device bay
+* [#7417](https://github.com/netbox-community/netbox/issues/7417) - Prevent exception when filtering objects list by invalid tag
+* [#7425](https://github.com/netbox-community/netbox/issues/7425) - Housekeeping command should honor zero verbosity
+* [#7427](https://github.com/netbox-community/netbox/issues/7427) - Don't select hidden rows when selecting all in a table
+
+---
+
+## v3.0.4 (2021-09-29)
+
+### Enhancements
+
+* [#6917](https://github.com/netbox-community/netbox/issues/6917) - Make IP assigned checkmark in IP table link to interface
+* [#6973](https://github.com/netbox-community/netbox/issues/6973) - Enable custom ordering of reports
+* [#7022](https://github.com/netbox-community/netbox/issues/7022) - Add ITA type C (CEE 7/16) power port type
+* [#7118](https://github.com/netbox-community/netbox/issues/7118) - Render URL custom fields as hyperlinks in object tables
+* [#7314](https://github.com/netbox-community/netbox/issues/7314) - Add SMA 905/906 fiber port types
+* [#7323](https://github.com/netbox-community/netbox/issues/7323) - Add serial filter field for racks & devices
+* [#7372](https://github.com/netbox-community/netbox/issues/7372) - Link to local docs for model from object add/edit views
+* [#7389](https://github.com/netbox-community/netbox/issues/7389) - Linkify tenant group in tenants list
+
+### Bug Fixes
+
+* [#7252](https://github.com/netbox-community/netbox/issues/7252) - Validate IP range size does not exceed max supported value
+* [#7294](https://github.com/netbox-community/netbox/issues/7294) - Fix SVG rendering for cable traces ending at unoccupied front ports
+* [#7304](https://github.com/netbox-community/netbox/issues/7304) - Require explicit values for all required choice fields during CSV import
+* [#7321](https://github.com/netbox-community/netbox/issues/7321) - Don't overwrite multi-select custom fields during bulk edit
+* [#7324](https://github.com/netbox-community/netbox/issues/7324) - Fix TypeError exception in web UI when filtering objects using single-choice filters
+* [#7333](https://github.com/netbox-community/netbox/issues/7333) - Prevent inadvertent deletion of prior change records when deleting objects
+* [#7341](https://github.com/netbox-community/netbox/issues/7341) - Fix incorrect URL in circuit breadcrumbs
+* [#7353](https://github.com/netbox-community/netbox/issues/7353) - Fix bulk creation of device/VM components via list view
+* [#7356](https://github.com/netbox-community/netbox/issues/7356) - Fix display of model documentation when adding device components
+* [#7358](https://github.com/netbox-community/netbox/issues/7358) - Add missing `choices` column to custom field CSV import form
+* [#7360](https://github.com/netbox-community/netbox/issues/7360) - Correct redirection URL after removing child device from device bay
+* [#7365](https://github.com/netbox-community/netbox/issues/7365) - Optimize performance when calculating prefix utilization
+* [#7374](https://github.com/netbox-community/netbox/issues/7374) - Add missing `face` parameter to API elevations request when editing device
+* [#7392](https://github.com/netbox-community/netbox/issues/7392) - Fix "help" links for custom fields, other models
+
+---
+
+## v3.0.3 (2021-09-20)
+
+### Enhancements
+
+* [#5775](https://github.com/netbox-community/netbox/issues/5775) - Enable synchronization of groups for remote authentication backend
+* [#6387](https://github.com/netbox-community/netbox/issues/6387) - Add xDSL interface type
+* [#6988](https://github.com/netbox-community/netbox/issues/6988) - Order tenants alphabetically without regard to group assignment
+* [#7032](https://github.com/netbox-community/netbox/issues/7032) - Add URM port types
+* [#7087](https://github.com/netbox-community/netbox/issues/7087) - Add `local_context_data` filter for virtual machines list
+* [#7208](https://github.com/netbox-community/netbox/issues/7208) - Add navigation breadcrumbs for custom scripts & reports
+* [#7210](https://github.com/netbox-community/netbox/issues/7210) - Add search/filter forms for all organizational models
+* [#7239](https://github.com/netbox-community/netbox/issues/7239) - Redirect global search to filtered object list when an object type is selected
+* [#7284](https://github.com/netbox-community/netbox/issues/7284) - Include comments field in table/export for all appropriate models
+
+### Bug Fixes
+
+* [#7167](https://github.com/netbox-community/netbox/issues/7167) - Ensure consistent font size when using monospace formatting
+* [#7226](https://github.com/netbox-community/netbox/issues/7226) - Exempt GraphQL API requests from CSRF inspection
+* [#7228](https://github.com/netbox-community/netbox/issues/7228) - Improve temperature conversions under device status
+* [#7248](https://github.com/netbox-community/netbox/issues/7248) - Fix global search results section links
+* [#7266](https://github.com/netbox-community/netbox/issues/7266) - Tweak font color for form field placeholder text
+* [#7273](https://github.com/netbox-community/netbox/issues/7273) - Fix natural ordering of device components in UI form fields
+* [#7279](https://github.com/netbox-community/netbox/issues/7279) - Fix exception when tracing cable with no associated path
+* [#7282](https://github.com/netbox-community/netbox/issues/7282) - Fix KeyError exception when `INSECURE_SKIP_TLS_VERIFY` is true
+* [#7298](https://github.com/netbox-community/netbox/issues/7298) - Restore missing object names from applied object list filters
+* [#7301](https://github.com/netbox-community/netbox/issues/7301) - Fix exception when deleting a large number of child prefixes
+
+---
+
+## v3.0.2 (2021-09-08)
+
+### Bug Fixes
+
+* [#7131](https://github.com/netbox-community/netbox/issues/7131) - Fix issue where Site fields were hidden when editing a VLAN group
+* [#7148](https://github.com/netbox-community/netbox/issues/7148) - Fix issue where static query parameters with multiple values were not queried properly
+* [#7153](https://github.com/netbox-community/netbox/issues/7153) - Allow clearing of assigned device type images
+* [#7162](https://github.com/netbox-community/netbox/issues/7162) - Ensure consistent treatment of `BASE_PATH` for UI-driven API requests
+* [#7164](https://github.com/netbox-community/netbox/issues/7164) - Fix styling of "decommissioned" label for circuits
+* [#7169](https://github.com/netbox-community/netbox/issues/7169) - Fix CSV import file upload
+* [#7176](https://github.com/netbox-community/netbox/issues/7176) - Fix issue where query parameters were duplicated across different forms of the same type
+* [#7179](https://github.com/netbox-community/netbox/issues/7179) - Prevent obscuring "connect" pop-up for interfaces under device view
+* [#7188](https://github.com/netbox-community/netbox/issues/7188) - Fix issue where select fields with `null_option` did not render or send the null option
+* [#7189](https://github.com/netbox-community/netbox/issues/7189) - Set connection factory for django-redis when Sentinel is in use
+* [#7191](https://github.com/netbox-community/netbox/issues/7191) - Fix issue where API-backed multi-select elements cleared selected options when adding new options
+* [#7193](https://github.com/netbox-community/netbox/issues/7193) - Fix prefix (flat) template issue when viewing child prefixes with prefixes available
+* [#7205](https://github.com/netbox-community/netbox/issues/7205) - Fix issue where selected fields with `null_option` set were not added to applied filters
+* [#7209](https://github.com/netbox-community/netbox/issues/7209) - Allow unlimited API results when `MAX_PAGE_SIZE` is disabled
+
+---
+
 ## v3.0.1 (2021-09-01)
 
 ### Bug Fixes

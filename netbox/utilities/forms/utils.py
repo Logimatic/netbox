@@ -1,6 +1,7 @@
 import re
 
 from django import forms
+from django.conf import settings
 from django.forms.models import fields_for_model
 
 from utilities.choices import unpack_grouped_choices
@@ -120,22 +121,35 @@ def get_selected_values(form, field_name):
     if not hasattr(form, 'cleaned_data'):
         form.is_valid()
     filter_data = form.cleaned_data.get(field_name)
-
-    # Selection field
-    if hasattr(form.fields[field_name], 'choices'):
-        try:
-            choices = dict(unpack_grouped_choices(form.fields[field_name].choices))
-            return [
-                label for value, label in choices.items() if str(value) in filter_data
-            ]
-        except TypeError:
-            # Field uses dynamic choices. Show all that have been populated.
-            return [
-                subwidget.choice_label for subwidget in form[field_name].subwidgets
-            ]
+    field = form.fields[field_name]
 
     # Non-selection field
-    return [str(filter_data)]
+    if not hasattr(field, 'choices'):
+        return [str(filter_data)]
+
+    # Get choice labels
+    if type(field.choices) is forms.models.ModelChoiceIterator:
+        # Field uses dynamic choices: show all that have been populated on the widget
+        values = [
+            subwidget.choice_label for subwidget in form[field_name].subwidgets
+        ]
+
+    else:
+        # Static selection field
+        choices = unpack_grouped_choices(field.choices)
+        if type(filter_data) not in (list, tuple):
+            filter_data = [filter_data]  # Ensure filter data is iterable
+        values = [
+            label for value, label in choices if str(value) in filter_data or None in filter_data
+        ]
+
+    if hasattr(field, 'null_option'):
+        # If the field has a `null_option` attribute set and it is selected,
+        # add it to the field's grouped choices.
+        if field.null_option is not None and None in filter_data:
+            values.append(field.null_option)
+
+    return values
 
 
 def add_blank_choice(choices):

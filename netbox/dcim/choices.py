@@ -192,6 +192,7 @@ class ConsolePortTypeChoices(ChoiceSet):
     TYPE_USB_MINI_B = 'usb-mini-b'
     TYPE_USB_MICRO_A = 'usb-micro-a'
     TYPE_USB_MICRO_B = 'usb-micro-b'
+    TYPE_USB_MICRO_AB = 'usb-micro-ab'
     TYPE_OTHER = 'other'
 
     CHOICES = (
@@ -210,6 +211,7 @@ class ConsolePortTypeChoices(ChoiceSet):
             (TYPE_USB_MINI_B, 'USB Mini B'),
             (TYPE_USB_MICRO_A, 'USB Micro A'),
             (TYPE_USB_MICRO_B, 'USB Micro B'),
+            (TYPE_USB_MICRO_AB, 'USB Micro AB'),
         )),
         ('Other', (
             (TYPE_OTHER, 'Other'),
@@ -316,6 +318,7 @@ class PowerPortTypeChoices(ChoiceSet):
     TYPE_CS8365C = 'cs8365c'
     TYPE_CS8465C = 'cs8465c'
     # ITA/international
+    TYPE_ITA_C = 'ita-c'
     TYPE_ITA_E = 'ita-e'
     TYPE_ITA_F = 'ita-f'
     TYPE_ITA_EF = 'ita-ef'
@@ -336,6 +339,7 @@ class PowerPortTypeChoices(ChoiceSet):
     TYPE_USB_MINI_B = 'usb-mini-b'
     TYPE_USB_MICRO_A = 'usb-micro-a'
     TYPE_USB_MICRO_B = 'usb-micro-b'
+    TYPE_USB_MICRO_AB = 'usb-micro-ab'
     TYPE_USB_3_B = 'usb-3-b'
     TYPE_USB_3_MICROB = 'usb-3-micro-b'
     # Direct current (DC)
@@ -421,6 +425,7 @@ class PowerPortTypeChoices(ChoiceSet):
             (TYPE_CS8465C, 'CS8465C'),
         )),
         ('International/ITA', (
+            (TYPE_ITA_C, 'ITA Type C (CEE 7/16)'),
             (TYPE_ITA_E, 'ITA Type E (CEE 7/5)'),
             (TYPE_ITA_F, 'ITA Type F (CEE 7/4)'),
             (TYPE_ITA_EF, 'ITA Type E/F (CEE 7/7)'),
@@ -442,6 +447,7 @@ class PowerPortTypeChoices(ChoiceSet):
             (TYPE_USB_MINI_B, 'USB Mini B'),
             (TYPE_USB_MICRO_A, 'USB Micro A'),
             (TYPE_USB_MICRO_B, 'USB Micro B'),
+            (TYPE_USB_MICRO_AB, 'USB Micro AB'),
             (TYPE_USB_3_B, 'USB 3.0 Type B'),
             (TYPE_USB_3_MICROB, 'USB 3.0 Micro B'),
         )),
@@ -679,6 +685,18 @@ class PowerOutletFeedLegChoices(ChoiceSet):
 # Interfaces
 #
 
+class InterfaceKindChoices(ChoiceSet):
+    KIND_PHYSICAL = 'physical'
+    KIND_VIRTUAL = 'virtual'
+    KIND_WIRELESS = 'wireless'
+
+    CHOICES = (
+        (KIND_PHYSICAL, 'Physical'),
+        (KIND_VIRTUAL, 'Virtual'),
+        (KIND_WIRELESS, 'Wireless'),
+    )
+
+
 class InterfaceTypeChoices(ChoiceSet):
 
     # Virtual
@@ -760,6 +778,9 @@ class InterfaceTypeChoices(ChoiceSet):
     TYPE_E1 = 'e1'
     TYPE_T3 = 't3'
     TYPE_E3 = 'e3'
+
+    # ATM/DSL
+    TYPE_XDSL = 'xdsl'
 
     # Stacking
     TYPE_STACKWISE = 'cisco-stackwise'
@@ -886,6 +907,12 @@ class InterfaceTypeChoices(ChoiceSet):
             )
         ),
         (
+            'ATM',
+            (
+                (TYPE_XDSL, 'xDSL'),
+            )
+        ),
+        (
             'Stacking',
             (
                 (TYPE_STACKWISE, 'Cisco StackWise'),
@@ -958,6 +985,11 @@ class PortTypeChoices(ChoiceSet):
     TYPE_SPLICE = 'splice'
     TYPE_CS = 'cs'
     TYPE_SN = 'sn'
+    TYPE_SMA_905 = 'sma-905'
+    TYPE_SMA_906 = 'sma-906'
+    TYPE_URM_P2 = 'urm-p2'
+    TYPE_URM_P4 = 'urm-p4'
+    TYPE_URM_P8 = 'urm-p8'
 
     CHOICES = (
         (
@@ -998,6 +1030,11 @@ class PortTypeChoices(ChoiceSet):
                 (TYPE_ST, 'ST'),
                 (TYPE_CS, 'CS'),
                 (TYPE_SN, 'SN'),
+                (TYPE_SMA_905, 'SMA 905'),
+                (TYPE_SMA_906, 'SMA 906'),
+                (TYPE_URM_P2, 'URM-P2'),
+                (TYPE_URM_P4, 'URM-P4'),
+                (TYPE_URM_P8, 'URM-P8'),
                 (TYPE_SPLICE, 'Splice'),
             )
         )

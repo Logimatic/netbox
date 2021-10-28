@@ -9,7 +9,7 @@ from dcim.models import (
 from tenancy.tables import TenantColumn
 from utilities.tables import (
     BaseTable, BooleanColumn, ButtonsColumn, ChoiceFieldColumn, ColorColumn, ColoredLabelColumn, LinkedCountColumn,
-    TagColumn, ToggleColumn,
+    MarkdownColumn, TagColumn, TemplateColumn, ToggleColumn,
 )
 from .template_code import (
     CABLETERMINATION, CONSOLEPORT_BUTTONS, CONSOLESERVERPORT_BUTTONS, DEVICE_LINK, DEVICEBAY_BUTTONS, DEVICEBAY_STATUS,
@@ -18,6 +18,7 @@ from .template_code import (
 )
 
 __all__ = (
+    'BaseInterfaceTable',
     'ConsolePortTable',
     'ConsoleServerPortTable',
     'DeviceBayTable',
@@ -187,6 +188,7 @@ class DeviceTable(BaseTable):
     vc_priority = tables.Column(
         verbose_name='VC Priority'
     )
+    comments = MarkdownColumn()
     tags = TagColumn(
         url_name='dcim:device_list'
     )
@@ -196,7 +198,7 @@ class DeviceTable(BaseTable):
         fields = (
             'pk', 'name', 'status', 'tenant', 'device_role', 'manufacturer', 'device_type', 'platform', 'serial',
             'asset_tag', 'site', 'location', 'rack', 'position', 'face', 'primary_ip', 'primary_ip4', 'primary_ip6',
-            'cluster', 'virtual_chassis', 'vc_position', 'vc_priority', 'tags',
+            'cluster', 'virtual_chassis', 'vc_position', 'vc_priority', 'comments', 'tags',
         )
         default_columns = (
             'pk', 'name', 'status', 'tenant', 'site', 'location', 'rack', 'device_role', 'manufacturer', 'device_type',
@@ -256,7 +258,7 @@ class CableTerminationTable(BaseTable):
         orderable=False,
         verbose_name='Cable Color'
     )
-    cable_peer = tables.TemplateColumn(
+    cable_peer = TemplateColumn(
         accessor='_cable_peer',
         template_code=CABLETERMINATION,
         orderable=False,
@@ -266,7 +268,7 @@ class CableTerminationTable(BaseTable):
 
 
 class PathEndpointTable(CableTerminationTable):
-    connection = tables.TemplateColumn(
+    connection = TemplateColumn(
         accessor='_path.last_node',
         template_code=CABLETERMINATION,
         verbose_name='Connection',
@@ -468,7 +470,7 @@ class BaseInterfaceTable(BaseTable):
         verbose_name='IP Addresses'
     )
     untagged_vlan = tables.Column(linkify=True)
-    tagged_vlans = tables.TemplateColumn(
+    tagged_vlans = TemplateColumn(
         template_code=INTERFACE_TAGGED_VLANS,
         orderable=False,
         verbose_name='Tagged VLANs'

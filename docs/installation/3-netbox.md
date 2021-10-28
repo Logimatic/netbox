@@ -70,19 +70,22 @@ If `git` is not already installed, install it:
 Next, clone the **master** branch of the NetBox GitHub repository into the current directory. (This branch always holds the current stable release.)
 
 ```no-highlight
-sudo git clone -b master https://github.com/netbox-community/netbox.git .
+sudo git clone -b master --depth 1 https://github.com/netbox-community/netbox.git .
 ```
+
+!!! note
+    The `git clone` command above utilizes a "shallow clone" to retrieve only the most recent commit. If you need to download the entire history, omit the `--depth 1` argument.
 
 The `git clone` command should generate output similar to the following:
 
 ```
 Cloning into '.'...
-remote: Counting objects: 1994, done.
-remote: Compressing objects: 100% (150/150), done.
-remote: Total 1994 (delta 80), reused 0 (delta 0), pack-reused 1842
-Receiving objects: 100% (1994/1994), 472.36 KiB | 0 bytes/s, done.
-Resolving deltas: 100% (1495/1495), done.
-Checking connectivity... done.
+remote: Enumerating objects: 996, done.
+remote: Counting objects: 100% (996/996), done.
+remote: Compressing objects: 100% (935/935), done.
+remote: Total 996 (delta 148), reused 386 (delta 34), pack-reused 0
+Receiving objects: 100% (996/996), 4.26 MiB | 9.81 MiB/s, done.
+Resolving deltas: 100% (148/148), done.
 ```
 
 !!! note
@@ -256,10 +259,10 @@ python3 manage.py createsuperuser
 
 NetBox includes a `housekeeping` management command that handles some recurring cleanup tasks, such as clearing out old sessions and expired change records. Although this command may be run manually, it is recommended to configure a scheduled job using the system's `cron` daemon or a similar utility.
 
-A shell script which invokes this command is included at `contrib/netbox-housekeeping.sh`. It can be copied to your system's daily cron task directory, or included within the crontab directly. (If installing NetBox into a nonstandard path, be sure to update the system paths within this script first.)
+A shell script which invokes this command is included at `contrib/netbox-housekeeping.sh`. It can be copied to or linked from your system's daily cron task directory, or included within the crontab directly. (If installing NetBox into a nonstandard path, be sure to update the system paths within this script first.)
 
 ```shell
-cp /opt/netbox/contrib/netbox-housekeeping.sh /etc/cron.daily/
+ln -s /opt/netbox/contrib/netbox-housekeeping.sh /etc/cron.daily/netbox-housekeeping
 ```
 
 See the [housekeeping documentation](../administration/housekeeping.md) for further details.

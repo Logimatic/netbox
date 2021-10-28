@@ -11,7 +11,7 @@ curl -H "Authorization: Token $TOKEN" \
 -H "Content-Type: application/json" \
 -H "Accept: application/json" \
 http://netbox/graphql/ \
---data '{"query": "query {circuits(status:\"active\" {cid provider {name}}}"}'
+--data '{"query": "query {circuit_list(status:\"active\") {cid provider {name}}}"}'
 ```
 
 The response will include the requested data formatted as JSON:
@@ -45,7 +45,7 @@ NetBox provides both a singular and plural query field for each object type:
 * `$OBJECT`: Returns a single object. Must specify the object's unique ID as `(id: 123)`.
 * `$OBJECT_list`: Returns a list of objects, optionally filtered by given parameters.
 
-For example, query `device(id:123)` to fetch a specific device (identified by its unique ID), and query `device_list` (with an optional set of fitlers) to fetch all devices.
+For example, query `device(id:123)` to fetch a specific device (identified by its unique ID), and query `device_list` (with an optional set of filters) to fetch all devices.
 
 For more detail on constructing GraphQL queries, see the [Graphene documentation](https://docs.graphene-python.org/en/latest/).
 
@@ -54,7 +54,7 @@ For more detail on constructing GraphQL queries, see the [Graphene documentation
 The GraphQL API employs the same filtering logic as the UI and REST API. Filters can be specified as key-value pairs within parentheses immediately following the query name. For example, the following will return only sites within the North Carolina region with a status of active:
 
 ```
-{"query": "query {sites(region:\"north-carolina\", status:\"active\") {name}}"}
+{"query": "query {site_list(region:\"north-carolina\", status:\"active\") {name}}"}
 ```
 
 ## Authentication

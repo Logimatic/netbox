@@ -5,7 +5,7 @@ import SlimSelect from 'slim-select';
 import { createToast } from '../../bs';
 import { hasUrl, hasExclusions, isTrigger } from '../util';
 import { DynamicParamsMap } from './dynamicParams';
-import { isStaticParams } from './types';
+import { isStaticParams, isOption } from './types';
 import {
   hasMore,
   isTruthy,
@@ -23,7 +23,7 @@ import type { Option } from 'slim-select/dist/data';
 import type { Trigger, PathFilter, ApplyMethod, QueryFilter } from './types';
 
 // Empty placeholder option.
-const PLACEHOLDER = {
+const EMPTY_PLACEHOLDER = {
   value: '',
   text: '',
   placeholder: true,
@@ -51,6 +51,18 @@ export class APISelect {
    * Form field placeholder.
    */
   public readonly placeholder: string;
+
+  /**
+   * Empty/placeholder option. Display text is optionally overridden via the `data-empty-option`
+   * attribute.
+   */
+  public readonly emptyOption: Option;
+
+  /**
+   * Null option. When `data-null-option` attribute is a string, the value is used to created an
+   * option of type `{text: '<value from data-null-option>': 'null'}`.
+   */
+  public readonly nullOption: Nullable<Option> = null;
 
   /**
    * Event that will initiate the API call to NetBox to load option data. By default, the trigger
@@ -138,18 +150,6 @@ export class APISelect {
   private more: Nullable<string> = null;
 
   /**
-   * This element's options come from the server pre-sorted and should not be sorted client-side.
-   * Determined by the existence of the `pre-sorted` attribute on the base `<select/>` element, or
-   * by existence of specific fields such as `_depth`.
-   */
-  private preSorted: boolean = false;
-
-  /**
-   * This instance's available options.
-   */
-  private _options: Option[] = [PLACEHOLDER];
-
-  /**
    * Array of options values which should be considered disabled or static.
    */
   private disabledOptions: Array<string> = [];
@@ -164,10 +164,6 @@ export class APISelect {
     this.base = base;
     this.name = base.name;
 
-    if (base.getAttribute('pre-sorted') !== null) {
-      this.preSorted = true;
-    }
-
     if (hasUrl(base)) {
       const url = base.getAttribute('data-url') as string;
       this.url = url;
@@ -180,6 +176,24 @@ export class APISelect {
     this.placeholder = this.getPlaceholder();
     this.disabledOptions = this.getDisabledOptions();
     this.disabledAttributes = this.getDisabledAttributes();
+
+    const emptyOption = base.getAttribute('data-empty-option');
+    if (isTruthy(emptyOption)) {
+      this.emptyOption = {
+        text: emptyOption,
+        value: '',
+      };
+    } else {
+      this.emptyOption = EMPTY_PLACEHOLDER;
+    }
+
+    const nullOption = base.getAttribute('data-null-option');
+    if (isTruthy(nullOption)) {
+      this.nullOption = {
+        text: nullOption,
+        value: 'null',
+      };
+    }
 
     this.slim = new SlimSelect({
       select: this.base,
@@ -265,38 +279,32 @@ export class APISelect {
    * This instance's available options.
    */
   private get options(): Option[] {
-    return this._options;
+    return this.slim.data.data.filter(isOption);
   }
 
   /**
-   * Sort incoming options by label and apply the new options to both the SlimSelect instance and
-   * this manager's state. If the `preSorted` attribute exists on the base `<select/>` element,
-   * the options will *not* be sorted.
+   * Apply new options to both the SlimSelect instance and this manager's state.
    */
   private set options(optionsIn: Option[]) {
     let newOptions = optionsIn;
-    if (!this.preSorted) {
-      newOptions = optionsIn.sort((a, b) => (a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1));
+    // Ensure null option is present, if it exists.
+    if (this.nullOption !== null) {
+      newOptions = [this.nullOption, ...newOptions];
     }
     // Deduplicate options each time they're set.
-    let deduplicated = uniqueByProperty(newOptions, 'value');
+    const deduplicated = uniqueByProperty(newOptions, 'value');
     // Determine if the new options have a placeholder.
     const hasPlaceholder = typeof deduplicated.find(o => o.value === '') !== 'undefined';
     // Get the placeholder index (note: if there is no placeholder, the index will be `-1`).
     const placeholderIdx = deduplicated.findIndex(o => o.value === '');
 
-    if (hasPlaceholder && placeholderIdx < 0) {
-      // If there is a placeholder but it is not the first element (due to sorting or other merge
-      // issues), remove it from the options array and place it in front.
-      deduplicated.splice(placeholderIdx);
-      deduplicated = [PLACEHOLDER, ...deduplicated];
+    if (hasPlaceholder && placeholderIdx >= 0) {
+      // If there is an existing placeholder, replace it.
+      deduplicated[placeholderIdx] = this.emptyOption;
+    } else {
+      // If there is not a placeholder, add one to the front.
+      deduplicated.unshift(this.emptyOption);
     }
-    if (!hasPlaceholder) {
-      // If there is no placeholder, add one to the front of the array.
-      deduplicated = [PLACEHOLDER, ...deduplicated];
-    }
-
-    this._options = deduplicated;
     this.slim.setData(deduplicated);
   }
 
@@ -304,7 +312,7 @@ export class APISelect {
    * Remove all options and reset back to the generic placeholder.
    */
   private resetOptions(): void {
-    this.options = [PLACEHOLDER];
+    this.options = [this.emptyOption];
   }
 
   /**
@@ -348,7 +356,12 @@ export class APISelect {
     const fetcher = debounce((event: Event) => this.handleSearch(event), 300, false);
 
     // Query the API when the input value changes or a value is pasted.
-    this.slim.slim.search.input.addEventListener('keyup', event => fetcher(event));
+    this.slim.slim.search.input.addEventListener('keyup', event => {
+      // Only search when necessary keys are pressed.
+      if (!event.key.match(/^(Arrow|Enter|Tab).*/)) {
+        return fetcher(event);
+      }
+    });
     this.slim.slim.search.input.addEventListener('paste', event => fetcher(event));
 
     // Watch every scroll event to determine if the scroll position is at bottom.
@@ -437,11 +450,8 @@ export class APISelect {
     for (const result of data.results) {
       let text = result.display;
 
-      if (typeof result._depth === 'number') {
+      if (typeof result._depth === 'number' && result._depth > 0) {
         // If the object has a `_depth` property, indent its display text.
-        if (!this.preSorted) {
-          this.preSorted = true;
-        }
         text = `<span class="depth">${'─'.repeat(result._depth)}&nbsp;</span>${text}`;
       }
       const data = {} as Record<string, string>;
@@ -534,7 +544,7 @@ export class APISelect {
    */
   private async getOptions(action: ApplyMethod = 'merge'): Promise<void> {
     if (this.queryUrl.includes(`{{`)) {
-      this.options = [PLACEHOLDER];
+      this.resetOptions();
       return;
     }
     await this.fetchOptions(this.queryUrl, action);

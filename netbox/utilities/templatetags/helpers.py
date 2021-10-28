@@ -58,7 +58,7 @@ def render_json(value):
     """
     Render a dictionary as formatted JSON.
     """
-    return json.dumps(value, indent=4, sort_keys=True)
+    return json.dumps(value, ensure_ascii=False, indent=4, sort_keys=True)
 
 
 @register.filter()
@@ -216,27 +216,11 @@ def percentage(x, y):
 
 
 @register.filter()
-def get_docs(model):
+def get_docs_url(model):
     """
-    Render and return documentation for the specified model.
+    Return the documentation URL for the specified model.
     """
-    path = '{}/models/{}/{}.md'.format(
-        settings.DOCS_ROOT,
-        model._meta.app_label,
-        model._meta.model_name
-    )
-    try:
-        with open(path, encoding='utf-8') as docfile:
-            content = docfile.read()
-    except FileNotFoundError:
-        return "Unable to load documentation, file not found: {}".format(path)
-    except IOError:
-        return "Unable to load documentation, error reading file: {}".format(path)
-
-    # Render Markdown with the admonition extension
-    content = markdown(content, extensions=['admonition', 'fenced_code', 'tables'])
-
-    return mark_safe(content)
+    return f'{settings.STATIC_URL}docs/models/{model._meta.app_label}/{model._meta.model_name}/'
 
 
 @register.filter()
@@ -411,10 +395,13 @@ def applied_filters(form, query_params):
     Display the active filters for a given filter form.
     """
     form.is_valid()
-    querydict = query_params.copy()
 
     applied_filters = []
     for filter_name in form.changed_data:
+        if filter_name not in form.cleaned_data:
+            continue
+
+        querydict = query_params.copy()
         if filter_name not in querydict:
             continue
 
