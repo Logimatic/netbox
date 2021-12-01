@@ -707,10 +707,12 @@ class InterfaceTypeChoices(ChoiceSet):
 
     # Ethernet
     TYPE_100ME_FIXED = '100base-tx'
+    TYPE_100ME_SFP = '100base-x-sfp'
     TYPE_1GE_FIXED = '1000base-t'
     TYPE_1GE_GBIC = '1000base-x-gbic'
     TYPE_1GE_SFP = '1000base-x-sfp'
     TYPE_2GE_FIXED = '2.5gbase-t'
+    TYPE_2x5GE_SFP = '2.5gbase-x-sfp'
     TYPE_5GE_FIXED = '5gbase-t'
     TYPE_10GE_FIXED = '10gbase-t'
     TYPE_10GE_CX4 = '10gbase-cx4'
@@ -731,6 +733,8 @@ class InterfaceTypeChoices(ChoiceSet):
     TYPE_200GE_QSFP56 = '200gbase-x-qsfp56'
     TYPE_400GE_QSFP_DD = '400gbase-x-qsfpdd'
     TYPE_400GE_OSFP = '400gbase-x-osfp'
+    TYPE_100ME_SC = '100base-x-sc'
+    TYPE_1000ME_SC = '1000base-x-sc'
 
     # Wireless
     TYPE_80211A = 'ieee802.11a'
@@ -821,8 +825,10 @@ class InterfaceTypeChoices(ChoiceSet):
         (
             'Ethernet (modular)',
             (
+		(TYPE_100ME_SFP, 'SFP (100ME FC)'),
                 (TYPE_1GE_GBIC, 'GBIC (1GE)'),
                 (TYPE_1GE_SFP, 'SFP (1GE)'),
+		(TYPE_2x5GE_SFP, 'SFP (2.5GE FC)'),
                 (TYPE_10GE_SFP_PLUS, 'SFP+ (10GE)'),
                 (TYPE_10GE_XFP, 'XFP (10GE)'),
                 (TYPE_10GE_XENPAK, 'XENPAK (10GE)'),
@@ -840,6 +846,8 @@ class InterfaceTypeChoices(ChoiceSet):
                 (TYPE_200GE_QSFP56, 'QSFP56 (200GE)'),
                 (TYPE_400GE_QSFP_DD, 'QSFP-DD (400GE)'),
                 (TYPE_400GE_OSFP, 'OSFP (400GE)'),
+		(TYPE_100ME_SC, 'SC (100ME)'),
+		(TYPE_1000ME_SC, 'SC (1GE)'),
             )
         ),
         (
