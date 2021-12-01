@@ -28,7 +28,7 @@ class RackRoleTable(BaseTable):
 
     class Meta(BaseTable.Meta):
         model = RackRole
-        fields = ('pk', 'name', 'rack_count', 'color', 'description', 'slug', 'actions')
+        fields = ('pk', 'id', 'name', 'rack_count', 'color', 'description', 'slug', 'actions')
         default_columns = ('pk', 'name', 'rack_count', 'color', 'description', 'actions')
 
 
@@ -72,12 +72,20 @@ class RackTable(BaseTable):
     tags = TagColumn(
         url_name='dcim:rack_list'
     )
+    outer_width = tables.TemplateColumn(
+        template_code="{{ record.outer_width }} {{ record.outer_unit }}",
+        verbose_name='Outer Width'
+    )
+    outer_depth = tables.TemplateColumn(
+        template_code="{{ record.outer_depth }} {{ record.outer_unit }}",
+        verbose_name='Outer Depth'
+    )
 
     class Meta(BaseTable.Meta):
         model = Rack
         fields = (
-            'pk', 'name', 'site', 'location', 'status', 'facility_id', 'tenant', 'role', 'serial', 'asset_tag', 'type',
-            'width', 'u_height', 'comments', 'device_count', 'get_utilization', 'get_power_utilization', 'tags',
+            'pk', 'id', 'name', 'site', 'location', 'status', 'facility_id', 'tenant', 'role', 'serial', 'asset_tag', 'type',
+            'width', 'outer_width', 'outer_depth', 'u_height', 'comments', 'device_count', 'get_utilization', 'get_power_utilization', 'tags',
         )
         default_columns = (
             'pk', 'name', 'site', 'location', 'status', 'facility_id', 'tenant', 'role', 'u_height', 'device_count',
@@ -115,7 +123,7 @@ class RackReservationTable(BaseTable):
     class Meta(BaseTable.Meta):
         model = RackReservation
         fields = (
-            'pk', 'reservation', 'site', 'rack', 'unit_list', 'user', 'created', 'tenant', 'description', 'tags',
+            'pk', 'id', 'reservation', 'site', 'rack', 'unit_list', 'user', 'created', 'tenant', 'description', 'tags',
             'actions',
         )
         default_columns = (
