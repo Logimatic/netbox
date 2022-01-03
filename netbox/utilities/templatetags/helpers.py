@@ -1,4 +1,5 @@
 import datetime
+import decimal
 import json
 import re
 from typing import Dict, Any
@@ -14,6 +15,7 @@ from django.utils.html import strip_tags
 from django.utils.safestring import mark_safe
 from markdown import markdown
 
+from netbox.config import get_config
 from utilities.forms import get_selected_values, TableConfigForm
 from utilities.markdown import StrikethroughExtension
 from utilities.utils import foreground_color
@@ -30,7 +32,7 @@ def placeholder(value):
     """
     Render a muted placeholder if value equates to False.
     """
-    if value:
+    if value not in ('', None):
         return value
     placeholder = '<span class="text-muted">&mdash;</span>'
     return mark_safe(placeholder)
@@ -41,7 +43,7 @@ def render_markdown(value):
     """
     Render text as Markdown
     """
-    schemes = '|'.join(settings.ALLOWED_URL_SCHEMES)
+    schemes = '|'.join(get_config().ALLOWED_URL_SCHEMES)
 
     # Strip HTML tags
     value = strip_tags(value)
@@ -51,11 +53,15 @@ def render_markdown(value):
     value = re.sub(pattern, '[\\1](\\3)', value, flags=re.IGNORECASE)
 
     # Sanitize Markdown reference links
-    pattern = fr'\[(.+)\]:\w?(?!({schemes})).*:(.+)'
+    pattern = fr'\[(.+)\]:\s*(?!({schemes}))\w*:(.+)'
     value = re.sub(pattern, '[\\1]: \\3', value, flags=re.IGNORECASE)
 
     # Render Markdown
     html = markdown(value, extensions=['fenced_code', 'tables', StrikethroughExtension()])
+
+    # If the string is not empty wrap it in rendered-markdown to style tables
+    if html:
+        html = f'<div class="rendered-markdown">{html}</div>'
 
     return mark_safe(html)
 
@@ -173,6 +179,19 @@ def humanize_megabytes(mb):
 
 
 @register.filter()
+def simplify_decimal(value):
+    """
+    Return the simplest expression of a decimal value. Examples:
+      1.00 => '1'
+      1.20 => '1.2'
+      1.23 => '1.23'
+    """
+    if type(value) is not decimal.Decimal:
+        return value
+    return str(value).rstrip('0').rstrip('.')
+
+
+@register.filter()
 def tzoffset(value):
     """
     Returns the hour offset of a given time zone using the current time.
@@ -218,7 +237,7 @@ def fgcolor(value):
     value = value.lower().strip('#')
     if not re.match('^[0-9a-f]{6}$', value):
         return ''
-    return '#{}'.format(foreground_color(value))
+    return f'#{foreground_color(value)}'
 
 
 @register.filter()
@@ -365,7 +384,7 @@ def querystring(request, **kwargs):
         return ''
 
 
-@register.inclusion_tag('utilities/templatetags/utilization_graph.html')
+@register.inclusion_tag('helpers/utilization_graph.html')
 def utilization_graph(utilization, warning_threshold=75, danger_threshold=90):
     """
     Display a horizontal bar graph indicating a percentage of utilization.
@@ -384,7 +403,7 @@ def utilization_graph(utilization, warning_threshold=75, danger_threshold=90):
     }
 
 
-@register.inclusion_tag('utilities/templatetags/tag.html')
+@register.inclusion_tag('helpers/tag.html')
 def tag(tag, url_name=None):
     """
     Display a tag, optionally linked to a filtered list of objects.
@@ -395,7 +414,7 @@ def tag(tag, url_name=None):
     }
 
 
-@register.inclusion_tag('utilities/templatetags/badge.html')
+@register.inclusion_tag('helpers/badge.html')
 def badge(value, bg_class='secondary', show_empty=False):
     """
     Display the specified number as a badge.
@@ -407,7 +426,24 @@ def badge(value, bg_class='secondary', show_empty=False):
     }
 
 
-@register.inclusion_tag('utilities/templatetags/table_config_form.html')
+@register.inclusion_tag('helpers/checkmark.html')
+def checkmark(value, show_false=True, true='Yes', false='No'):
+    """
+    Display either a green checkmark or red X to indicate a boolean value.
+
+    :param show_false: Display a red X if the value is False
+    :param true: Text label for true value
+    :param false: Text label for false value
+    """
+    return {
+        'value': bool(value),
+        'show_false': show_false,
+        'true_label': true,
+        'false_label': false,
+    }
+
+
+@register.inclusion_tag('helpers/table_config_form.html')
 def table_config_form(table, table_name=None):
     return {
         'table_name': table_name or table.__class__.__name__,
@@ -415,7 +451,7 @@ def table_config_form(table, table_name=None):
     }
 
 
-@register.inclusion_tag('utilities/templatetags/applied_filters.html')
+@register.inclusion_tag('helpers/applied_filters.html')
 def applied_filters(form, query_params):
     """
     Display the active filters for a given filter form.

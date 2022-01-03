@@ -12,8 +12,8 @@ from django_tables2.data import TableQuerysetData
 from django_tables2.utils import Accessor
 
 from extras.choices import CustomFieldTypeChoices
-from extras.models import CustomField
-from .utils import content_type_name
+from extras.models import CustomField, CustomLink
+from .utils import content_type_identifier, content_type_name
 from .paginator import EnhancedPaginator, get_paginate_count
 
 
@@ -34,15 +34,18 @@ class BaseTable(tables.Table):
         }
 
     def __init__(self, *args, user=None, extra_columns=None, **kwargs):
+        if extra_columns is None:
+            extra_columns = []
+
         # Add custom field columns
         obj_type = ContentType.objects.get_for_model(self._meta.model)
         cf_columns = [
             (f'cf_{cf.name}', CustomFieldColumn(cf)) for cf in CustomField.objects.filter(content_types=obj_type)
         ]
-        if extra_columns is not None:
-            extra_columns.extend(cf_columns)
-        else:
-            extra_columns = cf_columns
+        cl_columns = [
+            (f'cl_{cl.name}', CustomLinkColumn(cl)) for cl in CustomLink.objects.filter(content_type=obj_type)
+        ]
+        extra_columns.extend([*cf_columns, *cl_columns])
 
         super().__init__(*args, extra_columns=extra_columns, **kwargs)
 
@@ -208,7 +211,6 @@ class ButtonsColumn(tables.TemplateColumn):
 
     :param model: Model class to use for calculating URL view names
     :param prepend_content: Additional template content to render in the column (optional)
-    :param return_url_extra: String to append to the return URL (e.g. for specifying a tab) (optional)
     """
     buttons = ('changelog', 'edit', 'delete')
     attrs = {'td': {'class': 'text-end text-nowrap noprint'}}
@@ -220,18 +222,18 @@ class ButtonsColumn(tables.TemplateColumn):
         </a>
     {{% endif %}}
     {{% if "edit" in buttons and perms.{app_label}.change_{model_name} %}}
-        <a href="{{% url '{app_label}:{model_name}_edit' pk=record.pk %}}?return_url={{{{ request.path }}}}{{{{ return_url_extra }}}}" class="btn btn-sm btn-warning" title="Edit">
+        <a href="{{% url '{app_label}:{model_name}_edit' pk=record.pk %}}?return_url={{{{ request.path }}}}" class="btn btn-sm btn-warning" title="Edit">
             <i class="mdi mdi-pencil"></i>
         </a>
     {{% endif %}}
     {{% if "delete" in buttons and perms.{app_label}.delete_{model_name} %}}
-        <a href="{{% url '{app_label}:{model_name}_delete' pk=record.pk %}}?return_url={{{{ request.path }}}}{{{{ return_url_extra }}}}" class="btn btn-sm btn-danger" title="Delete">
+        <a href="{{% url '{app_label}:{model_name}_delete' pk=record.pk %}}?return_url={{{{ request.path }}}}" class="btn btn-sm btn-danger" title="Delete">
             <i class="mdi mdi-trash-can-outline"></i>
         </a>
     {{% endif %}}
     """
 
-    def __init__(self, model, *args, buttons=None, prepend_template=None, return_url_extra='', **kwargs):
+    def __init__(self, model, *args, buttons=None, prepend_template=None, **kwargs):
         if prepend_template:
             prepend_template = prepend_template.replace('{', '{{')
             prepend_template = prepend_template.replace('}', '}}')
@@ -251,7 +253,6 @@ class ButtonsColumn(tables.TemplateColumn):
 
         self.extra_context.update({
             'buttons': buttons or self.buttons,
-            'return_url_extra': return_url_extra,
         })
 
     def header(self):
@@ -289,15 +290,26 @@ class ContentTypeColumn(tables.Column):
     def value(self, value):
         if value is None:
             return None
-        return f"{value.app_label}.{value.model}"
+        return content_type_identifier(value)
 
 
 class ContentTypesColumn(tables.ManyToManyColumn):
     """
     Display a list of ContentType instances.
     """
+    def __init__(self, separator=None, *args, **kwargs):
+        # Use a line break as the default separator
+        if separator is None:
+            separator = mark_safe('<br />')
+        super().__init__(separator=separator, *args, **kwargs)
+
     def transform(self, obj):
         return content_type_name(obj)
+
+    def value(self, value):
+        return ','.join([
+            content_type_identifier(ct) for ct in self.filter(value)
+        ])
 
 
 class ColorColumn(tables.Column):
@@ -404,7 +416,40 @@ class CustomFieldColumn(tables.Column):
         elif self.customfield.type == CustomFieldTypeChoices.TYPE_URL:
             # Linkify custom URLs
             return mark_safe(f'<a href="{value}">{value}</a>')
-        return value or self.default
+        if value is not None:
+            return value
+        return self.default
+
+
+class CustomLinkColumn(tables.Column):
+    """
+    Render a custom links as a table column.
+    """
+    def __init__(self, customlink, *args, **kwargs):
+        self.customlink = customlink
+        kwargs['accessor'] = Accessor('pk')
+        if 'verbose_name' not in kwargs:
+            kwargs['verbose_name'] = customlink.name
+
+        super().__init__(*args, **kwargs)
+
+    def render(self, record):
+        try:
+            rendered = self.customlink.render({'obj': record})
+            if rendered:
+                return mark_safe(f'<a href="{rendered["link"]}"{rendered["link_target"]}>{rendered["text"]}</a>')
+        except Exception as e:
+            return mark_safe(f'<span class="text-danger" title="{e}"><i class="mdi mdi-alert"></i> Error</span>')
+        return ''
+
+    def value(self, record):
+        try:
+            rendered = self.customlink.render({'obj': record})
+            if rendered:
+                return rendered['link']
+        except Exception:
+            pass
+        return None
 
 
 class MPTTColumn(tables.TemplateColumn):
@@ -478,3 +523,19 @@ def paginate_table(table, request):
         'per_page': get_paginate_count(request)
     }
     RequestConfig(request, paginate).configure(table)
+
+
+#
+# Callables
+#
+
+def linkify_email(value):
+    if value is None:
+        return None
+    return f"mailto:{value}"
+
+
+def linkify_phone(value):
+    if value is None:
+        return None
+    return f"tel:{value}"

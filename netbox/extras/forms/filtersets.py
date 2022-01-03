@@ -9,9 +9,8 @@ from extras.models import *
 from extras.utils import FeatureQuery
 from tenancy.models import Tenant, TenantGroup
 from utilities.forms import (
-    add_blank_choice, APISelectMultiple, BootstrapMixin, ContentTypeChoiceField,
-    ContentTypeMultipleChoiceField, DateTimePicker, DynamicModelMultipleChoiceField, StaticSelect,
-    StaticSelectMultiple, BOOLEAN_WITH_BLANK_CHOICES,
+    add_blank_choice, APISelectMultiple, ContentTypeChoiceField, ContentTypeMultipleChoiceField, DateTimePicker,
+    DynamicModelMultipleChoiceField, FilterForm, StaticSelect, StaticSelectMultiple, BOOLEAN_WITH_BLANK_CHOICES,
 )
 from virtualization.models import Cluster, ClusterGroup
 
@@ -28,17 +27,12 @@ __all__ = (
 )
 
 
-class CustomFieldFilterForm(BootstrapMixin, forms.Form):
+class CustomFieldFilterForm(FilterForm):
     field_groups = [
         ['q'],
         ['type', 'content_types'],
         ['weight', 'required'],
     ]
-    q = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={'placeholder': _('All Fields')}),
-        label=_('Search')
-    )
     content_types = ContentTypeMultipleChoiceField(
         queryset=ContentType.objects.all(),
         limit_choices_to=FeatureQuery('custom_fields'),
@@ -61,16 +55,11 @@ class CustomFieldFilterForm(BootstrapMixin, forms.Form):
     )
 
 
-class CustomLinkFilterForm(BootstrapMixin, forms.Form):
+class CustomLinkFilterForm(FilterForm):
     field_groups = [
         ['q'],
         ['content_type', 'weight', 'new_window'],
     ]
-    q = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={'placeholder': _('All Fields')}),
-        label=_('Search')
-    )
     content_type = ContentTypeChoiceField(
         queryset=ContentType.objects.all(),
         limit_choices_to=FeatureQuery('custom_fields'),
@@ -87,16 +76,11 @@ class CustomLinkFilterForm(BootstrapMixin, forms.Form):
     )
 
 
-class ExportTemplateFilterForm(BootstrapMixin, forms.Form):
+class ExportTemplateFilterForm(FilterForm):
     field_groups = [
         ['q'],
         ['content_type', 'mime_type', 'file_extension', 'as_attachment'],
     ]
-    q = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={'placeholder': _('All Fields')}),
-        label=_('Search')
-    )
     content_type = ContentTypeChoiceField(
         queryset=ContentType.objects.all(),
         limit_choices_to=FeatureQuery('custom_fields'),
@@ -117,17 +101,12 @@ class ExportTemplateFilterForm(BootstrapMixin, forms.Form):
     )
 
 
-class WebhookFilterForm(BootstrapMixin, forms.Form):
+class WebhookFilterForm(FilterForm):
     field_groups = [
         ['q'],
         ['content_types', 'http_method', 'enabled'],
         ['type_create', 'type_update', 'type_delete'],
     ]
-    q = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={'placeholder': _('All Fields')}),
-        label=_('Search')
-    )
     content_types = ContentTypeMultipleChoiceField(
         queryset=ContentType.objects.all(),
         limit_choices_to=FeatureQuery('custom_fields'),
@@ -165,12 +144,8 @@ class WebhookFilterForm(BootstrapMixin, forms.Form):
     )
 
 
-class TagFilterForm(BootstrapMixin, forms.Form):
+class TagFilterForm(FilterForm):
     model = Tag
-    q = forms.CharField(
-        required=False,
-        label=_('Search')
-    )
     content_type_id = ContentTypeMultipleChoiceField(
         queryset=ContentType.objects.filter(FeatureQuery('tags').get_query()),
         required=False,
@@ -178,7 +153,7 @@ class TagFilterForm(BootstrapMixin, forms.Form):
     )
 
 
-class ConfigContextFilterForm(BootstrapMixin, forms.Form):
+class ConfigContextFilterForm(FilterForm):
     field_groups = [
         ['q', 'tag'],
         ['region_id', 'site_group_id', 'site_id'],
@@ -186,77 +161,61 @@ class ConfigContextFilterForm(BootstrapMixin, forms.Form):
         ['cluster_group_id', 'cluster_id'],
         ['tenant_group_id', 'tenant_id']
     ]
-    q = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={'placeholder': _('All Fields')}),
-        label=_('Search')
-    )
     region_id = DynamicModelMultipleChoiceField(
         queryset=Region.objects.all(),
         required=False,
-        label=_('Regions'),
-        fetch_trigger='open'
+        label=_('Regions')
     )
     site_group_id = DynamicModelMultipleChoiceField(
         queryset=SiteGroup.objects.all(),
         required=False,
-        label=_('Site groups'),
-        fetch_trigger='open'
+        label=_('Site groups')
     )
     site_id = DynamicModelMultipleChoiceField(
         queryset=Site.objects.all(),
         required=False,
-        label=_('Sites'),
-        fetch_trigger='open'
+        label=_('Sites')
     )
     device_type_id = DynamicModelMultipleChoiceField(
         queryset=DeviceType.objects.all(),
         required=False,
-        label=_('Device types'),
-        fetch_trigger='open'
+        label=_('Device types')
     )
     role_id = DynamicModelMultipleChoiceField(
         queryset=DeviceRole.objects.all(),
         required=False,
-        label=_('Roles'),
-        fetch_trigger='open'
+        label=_('Roles')
     )
     platform_id = DynamicModelMultipleChoiceField(
         queryset=Platform.objects.all(),
         required=False,
-        label=_('Platforms'),
-        fetch_trigger='open'
+        label=_('Platforms')
     )
     cluster_group_id = DynamicModelMultipleChoiceField(
         queryset=ClusterGroup.objects.all(),
         required=False,
-        label=_('Cluster groups'),
-        fetch_trigger='open'
+        label=_('Cluster groups')
     )
     cluster_id = DynamicModelMultipleChoiceField(
         queryset=Cluster.objects.all(),
         required=False,
-        label=_('Clusters'),
-        fetch_trigger='open'
+        label=_('Clusters')
     )
     tenant_group_id = DynamicModelMultipleChoiceField(
         queryset=TenantGroup.objects.all(),
         required=False,
-        label=_('Tenant groups'),
-        fetch_trigger='open'
+        label=_('Tenant groups')
     )
     tenant_id = DynamicModelMultipleChoiceField(
         queryset=Tenant.objects.all(),
         required=False,
-        label=_('Tenant'),
-        fetch_trigger='open'
+        label=_('Tenant')
     )
     tag = DynamicModelMultipleChoiceField(
         queryset=Tag.objects.all(),
         to_field_name='slug',
         required=False,
-        label=_('Tags'),
-        fetch_trigger='open'
+        label=_('Tags')
     )
 
 
@@ -270,18 +229,13 @@ class LocalConfigContextFilterForm(forms.Form):
     )
 
 
-class JournalEntryFilterForm(BootstrapMixin, forms.Form):
+class JournalEntryFilterForm(FilterForm):
     model = JournalEntry
     field_groups = [
         ['q'],
         ['created_before', 'created_after', 'created_by_id'],
         ['assigned_object_type_id', 'kind']
     ]
-    q = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={'placeholder': _('All Fields')}),
-        label=_('Search')
-    )
     created_after = forms.DateTimeField(
         required=False,
         label=_('After'),
@@ -298,8 +252,7 @@ class JournalEntryFilterForm(BootstrapMixin, forms.Form):
         label=_('User'),
         widget=APISelectMultiple(
             api_url='/api/users/users/',
-        ),
-        fetch_trigger='open'
+        )
     )
     assigned_object_type_id = DynamicModelMultipleChoiceField(
         queryset=ContentType.objects.all(),
@@ -307,8 +260,7 @@ class JournalEntryFilterForm(BootstrapMixin, forms.Form):
         label=_('Object Type'),
         widget=APISelectMultiple(
             api_url='/api/extras/content-types/',
-        ),
-        fetch_trigger='open'
+        )
     )
     kind = forms.ChoiceField(
         choices=add_blank_choice(JournalEntryKindChoices),
@@ -317,18 +269,13 @@ class JournalEntryFilterForm(BootstrapMixin, forms.Form):
     )
 
 
-class ObjectChangeFilterForm(BootstrapMixin, forms.Form):
+class ObjectChangeFilterForm(FilterForm):
     model = ObjectChange
     field_groups = [
         ['q'],
         ['time_before', 'time_after', 'action'],
         ['user_id', 'changed_object_type_id'],
     ]
-    q = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={'placeholder': _('All Fields')}),
-        label=_('Search')
-    )
     time_after = forms.DateTimeField(
         required=False,
         label=_('After'),
@@ -350,8 +297,7 @@ class ObjectChangeFilterForm(BootstrapMixin, forms.Form):
         label=_('User'),
         widget=APISelectMultiple(
             api_url='/api/users/users/',
-        ),
-        fetch_trigger='open'
+        )
     )
     changed_object_type_id = DynamicModelMultipleChoiceField(
         queryset=ContentType.objects.all(),
@@ -359,6 +305,5 @@ class ObjectChangeFilterForm(BootstrapMixin, forms.Form):
         label=_('Object Type'),
         widget=APISelectMultiple(
             api_url='/api/extras/content-types/',
-        ),
-        fetch_trigger='open'
+        )
     )

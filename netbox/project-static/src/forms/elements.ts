@@ -1,4 +1,32 @@
-import { getElements, scrollTo } from '../util';
+import { getElements, scrollTo, isTruthy } from '../util';
+
+/**
+ * When editing an object, it is sometimes desirable to customize the form action *without*
+ * overriding the form's `submit` event. For example, the 'Save & Continue' button. We don't want
+ * to use the `formaction` attribute on that element because it will be included on the form even
+ * if the button isn't clicked.
+ *
+ * @example
+ * ```html
+ * <button type="button" return-url="/special-url/">
+ *   Save & Continue
+ * </button>
+ * ```
+ *
+ * @param event Click event.
+ */
+function handleSubmitWithReturnUrl(event: MouseEvent): void {
+  const element = event.target as HTMLElement;
+  if (element.tagName === 'BUTTON') {
+    const button = element as HTMLButtonElement;
+    const action = button.getAttribute('return-url');
+    const form = button.form;
+    if (form !== null && isTruthy(action)) {
+      form.action = action;
+      form.submit();
+    }
+  }
+}
 
 function handleFormSubmit(event: Event, form: HTMLFormElement): void {
   // Track the names of each invalid field.
@@ -7,11 +35,6 @@ function handleFormSubmit(event: Event, form: HTMLFormElement): void {
   for (const element of form.querySelectorAll<FormControls>('*[name]')) {
     if (!element.validity.valid) {
       invalids.add(element.name);
-
-      // If the field is invalid, but contains the .is-valid class, remove it.
-      if (element.classList.contains('is-valid')) {
-        element.classList.remove('is-valid');
-      }
       // If the field is invalid, but doesn't contain the .is-invalid class, add it.
       if (!element.classList.contains('is-invalid')) {
         element.classList.add('is-invalid');
@@ -20,10 +43,6 @@ function handleFormSubmit(event: Event, form: HTMLFormElement): void {
       // If the field is valid, but contains the .is-invalid class, remove it.
       if (element.classList.contains('is-invalid')) {
         element.classList.remove('is-invalid');
-      }
-      // If the field is valid, but doesn't contain the .is-valid class, add it.
-      if (!element.classList.contains('is-valid')) {
-        element.classList.add('is-valid');
       }
     }
   }
@@ -35,6 +54,15 @@ function handleFormSubmit(event: Event, form: HTMLFormElement): void {
 
     // If the form has invalid fields, don't submit it.
     event.preventDefault();
+  }
+}
+
+/**
+ * Attach event listeners to form buttons with the `return-url` attribute present.
+ */
+function initReturnUrlSubmitButtons(): void {
+  for (const button of getElements<HTMLButtonElement>('button[return-url]')) {
+    button.addEventListener('click', handleSubmitWithReturnUrl);
   }
 }
 
@@ -54,4 +82,5 @@ export function initFormElements(): void {
       submitter.addEventListener('click', (event: Event) => handleFormSubmit(event, form));
     }
   }
+  initReturnUrlSubmitButtons();
 }

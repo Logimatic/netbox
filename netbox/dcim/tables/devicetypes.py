@@ -41,12 +41,16 @@ class ManufacturerTable(BaseTable):
         verbose_name='Platforms'
     )
     slug = tables.Column()
+    tags = TagColumn(
+        url_name='dcim:manufacturer_list'
+    )
     actions = ButtonsColumn(Manufacturer)
 
     class Meta(BaseTable.Meta):
         model = Manufacturer
         fields = (
-            'pk', 'id', 'name', 'devicetype_count', 'inventoryitem_count', 'platform_count', 'description', 'slug', 'actions',
+            'pk', 'id', 'name', 'devicetype_count', 'inventoryitem_count', 'platform_count', 'description', 'slug',
+            'actions',
         )
         default_columns = (
             'pk', 'name', 'devicetype_count', 'inventoryitem_count', 'platform_count', 'description', 'slug', 'actions',
@@ -80,7 +84,7 @@ class DeviceTypeTable(BaseTable):
         model = DeviceType
         fields = (
             'pk', 'id', 'model', 'manufacturer', 'slug', 'part_number', 'u_height', 'is_full_depth', 'subdevice_role',
-            'comments', 'instance_count', 'tags',
+            'airflow', 'comments', 'instance_count', 'tags',
         )
         default_columns = (
             'pk', 'model', 'manufacturer', 'part_number', 'u_height', 'is_full_depth', 'instance_count',
@@ -107,8 +111,7 @@ class ComponentTemplateTable(BaseTable):
 class ConsolePortTemplateTable(ComponentTemplateTable):
     actions = ButtonsColumn(
         model=ConsolePortTemplate,
-        buttons=('edit', 'delete'),
-        return_url_extra='%23tab_consoleports'
+        buttons=('edit', 'delete')
     )
 
     class Meta(ComponentTemplateTable.Meta):
@@ -120,8 +123,7 @@ class ConsolePortTemplateTable(ComponentTemplateTable):
 class ConsoleServerPortTemplateTable(ComponentTemplateTable):
     actions = ButtonsColumn(
         model=ConsoleServerPortTemplate,
-        buttons=('edit', 'delete'),
-        return_url_extra='%23tab_consoleserverports'
+        buttons=('edit', 'delete')
     )
 
     class Meta(ComponentTemplateTable.Meta):
@@ -133,8 +135,7 @@ class ConsoleServerPortTemplateTable(ComponentTemplateTable):
 class PowerPortTemplateTable(ComponentTemplateTable):
     actions = ButtonsColumn(
         model=PowerPortTemplate,
-        buttons=('edit', 'delete'),
-        return_url_extra='%23tab_powerports'
+        buttons=('edit', 'delete')
     )
 
     class Meta(ComponentTemplateTable.Meta):
@@ -146,8 +147,7 @@ class PowerPortTemplateTable(ComponentTemplateTable):
 class PowerOutletTemplateTable(ComponentTemplateTable):
     actions = ButtonsColumn(
         model=PowerOutletTemplate,
-        buttons=('edit', 'delete'),
-        return_url_extra='%23tab_poweroutlets'
+        buttons=('edit', 'delete')
     )
 
     class Meta(ComponentTemplateTable.Meta):
@@ -162,8 +162,7 @@ class InterfaceTemplateTable(ComponentTemplateTable):
     )
     actions = ButtonsColumn(
         model=InterfaceTemplate,
-        buttons=('edit', 'delete'),
-        return_url_extra='%23tab_interfaces'
+        buttons=('edit', 'delete')
     )
 
     class Meta(ComponentTemplateTable.Meta):
@@ -179,8 +178,7 @@ class FrontPortTemplateTable(ComponentTemplateTable):
     color = ColorColumn()
     actions = ButtonsColumn(
         model=FrontPortTemplate,
-        buttons=('edit', 'delete'),
-        return_url_extra='%23tab_frontports'
+        buttons=('edit', 'delete')
     )
 
     class Meta(ComponentTemplateTable.Meta):
@@ -193,8 +191,7 @@ class RearPortTemplateTable(ComponentTemplateTable):
     color = ColorColumn()
     actions = ButtonsColumn(
         model=RearPortTemplate,
-        buttons=('edit', 'delete'),
-        return_url_extra='%23tab_rearports'
+        buttons=('edit', 'delete')
     )
 
     class Meta(ComponentTemplateTable.Meta):
@@ -206,8 +203,7 @@ class RearPortTemplateTable(ComponentTemplateTable):
 class DeviceBayTemplateTable(ComponentTemplateTable):
     actions = ButtonsColumn(
         model=DeviceBayTemplate,
-        buttons=('edit', 'delete'),
-        return_url_extra='%23tab_devicebays'
+        buttons=('edit', 'delete')
     )
 
     class Meta(ComponentTemplateTable.Meta):

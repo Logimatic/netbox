@@ -5,10 +5,10 @@ from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
 from dcim.api.nested_serializers import (
-    NestedDeviceSerializer, NestedDeviceRoleSerializer, NestedDeviceTypeSerializer, NestedPlatformSerializer,
-    NestedRackSerializer, NestedRegionSerializer, NestedSiteSerializer, NestedSiteGroupSerializer,
+    NestedDeviceRoleSerializer, NestedDeviceTypeSerializer, NestedPlatformSerializer, NestedRegionSerializer,
+    NestedSiteSerializer, NestedSiteGroupSerializer,
 )
-from dcim.models import Device, DeviceRole, DeviceType, Platform, Rack, Region, Site, SiteGroup
+from dcim.models import DeviceRole, DeviceType, Platform, Region, Site, SiteGroup
 from extras.choices import *
 from extras.models import *
 from extras.utils import FeatureQuery
@@ -61,7 +61,7 @@ class WebhookSerializer(ValidatedModelSerializer):
         fields = [
             'id', 'url', 'display', 'content_types', 'name', 'type_create', 'type_update', 'type_delete', 'payload_url',
             'enabled', 'http_method', 'http_content_type', 'additional_headers', 'body_template', 'secret',
-            'ssl_verification', 'ca_file_path',
+            'conditions', 'ssl_verification', 'ca_file_path',
         ]
 
 
@@ -150,7 +150,7 @@ class ImageAttachmentSerializer(ValidatedModelSerializer):
         model = ImageAttachment
         fields = [
             'id', 'url', 'display', 'content_type', 'object_id', 'parent', 'name', 'image', 'image_height',
-            'image_width', 'created',
+            'image_width', 'created', 'last_updated',
         ]
 
     def validate(self, data):
@@ -170,17 +170,7 @@ class ImageAttachmentSerializer(ValidatedModelSerializer):
 
     @swagger_serializer_method(serializer_or_field=serializers.DictField)
     def get_parent(self, obj):
-
-        # Static mapping of models to their nested serializers
-        if isinstance(obj.parent, Device):
-            serializer = NestedDeviceSerializer
-        elif isinstance(obj.parent, Rack):
-            serializer = NestedRackSerializer
-        elif isinstance(obj.parent, Site):
-            serializer = NestedSiteSerializer
-        else:
-            raise Exception("Unexpected type of parent object for ImageAttachment")
-
+        serializer = get_serializer_for_model(obj.parent, prefix='Nested')
         return serializer(obj.parent, context={'request': self.context['request']}).data
 
 
