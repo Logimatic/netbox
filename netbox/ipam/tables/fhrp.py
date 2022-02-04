@@ -38,7 +38,7 @@ class FHRPGroupTable(BaseTable):
         model = FHRPGroup
         fields = (
             'pk', 'group_id', 'protocol', 'auth_type', 'auth_key', 'description', 'ip_addresses', 'interface_count',
-            'tags',
+            'tags', 'created', 'last_updated',
         )
         default_columns = ('pk', 'group_id', 'protocol', 'auth_type', 'description', 'ip_addresses', 'interface_count')
 
@@ -46,7 +46,7 @@ class FHRPGroupTable(BaseTable):
 class FHRPGroupAssignmentTable(BaseTable):
     pk = ToggleColumn()
     interface_parent = tables.Column(
-        accessor=tables.A('interface.parent_object'),
+        accessor=tables.A('interface__parent_object'),
         linkify=True,
         orderable=False,
         verbose_name='Parent'
@@ -60,7 +60,7 @@ class FHRPGroupAssignmentTable(BaseTable):
     )
     actions = ButtonsColumn(
         model=FHRPGroupAssignment,
-        buttons=('edit', 'delete', 'foo')
+        buttons=('edit', 'delete')
     )
 
     class Meta(BaseTable.Meta):

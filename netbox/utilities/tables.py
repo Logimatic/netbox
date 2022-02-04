@@ -330,15 +330,15 @@ class ColoredLabelColumn(tables.TemplateColumn):
     Render a colored label (e.g. for DeviceRoles).
     """
     template_code = """
-    {% load helpers %}
-    {% if value %}
-    <span class="badge" style="color: {{ value.color|fgcolor }}; background-color: #{{ value.color }}">
-      {{ value }}
-    </span>
-    {% else %}
-    &mdash;
-    {% endif %}
-    """
+{% load helpers %}
+  {% if value %}
+  <span class="badge" style="color: {{ value.color|fgcolor }}; background-color: #{{ value.color }}">
+    <a href="{{ value.get_absolute_url }}">{{ value }}</a>
+  </span>
+{% else %}
+  &mdash;
+{% endif %}
+"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(template_code=self.template_code, *args, **kwargs)
@@ -414,9 +414,19 @@ class CustomFieldColumn(tables.Column):
     def render(self, value):
         if isinstance(value, list):
             return ', '.join(v for v in value)
+        elif self.customfield.type == CustomFieldTypeChoices.TYPE_BOOLEAN and value is True:
+            return mark_safe('<i class="mdi mdi-check-bold text-success"></i>')
+        elif self.customfield.type == CustomFieldTypeChoices.TYPE_BOOLEAN and value is False:
+            return mark_safe('<i class="mdi mdi-close-thick text-danger"></i>')
         elif self.customfield.type == CustomFieldTypeChoices.TYPE_URL:
-            # Linkify custom URLs
             return mark_safe(f'<a href="{value}">{value}</a>')
+        if value is not None:
+            return value
+        return self.default
+
+    def value(self, value):
+        if isinstance(value, list):
+            return ','.join(v for v in value)
         if value is not None:
             return value
         return self.default

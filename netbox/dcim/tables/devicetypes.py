@@ -50,7 +50,7 @@ class ManufacturerTable(BaseTable):
         model = Manufacturer
         fields = (
             'pk', 'id', 'name', 'devicetype_count', 'inventoryitem_count', 'platform_count', 'description', 'slug',
-            'actions',
+            'actions', 'created', 'last_updated',
         )
         default_columns = (
             'pk', 'name', 'devicetype_count', 'inventoryitem_count', 'platform_count', 'description', 'slug', 'actions',
@@ -66,6 +66,9 @@ class DeviceTypeTable(BaseTable):
     model = tables.Column(
         linkify=True,
         verbose_name='Device Type'
+    )
+    manufacturer = tables.Column(
+        linkify=True
     )
     is_full_depth = BooleanColumn(
         verbose_name='Full Depth'
@@ -84,7 +87,7 @@ class DeviceTypeTable(BaseTable):
         model = DeviceType
         fields = (
             'pk', 'id', 'model', 'manufacturer', 'slug', 'part_number', 'u_height', 'is_full_depth', 'subdevice_role',
-            'airflow', 'comments', 'instance_count', 'tags',
+            'airflow', 'comments', 'instance_count', 'tags', 'created', 'last_updated',
         )
         default_columns = (
             'pk', 'model', 'manufacturer', 'part_number', 'u_height', 'is_full_depth', 'instance_count',

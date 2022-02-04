@@ -93,7 +93,10 @@ class RIRTable(BaseTable):
 
     class Meta(BaseTable.Meta):
         model = RIR
-        fields = ('pk', 'id', 'name', 'slug', 'is_private', 'aggregate_count', 'description', 'tags', 'actions')
+        fields = (
+            'pk', 'id', 'name', 'slug', 'is_private', 'aggregate_count', 'description', 'tags', 'actions', 'created',
+            'last_updated',
+        )
         default_columns = ('pk', 'name', 'is_private', 'aggregate_count', 'description', 'actions')
 
 
@@ -106,17 +109,30 @@ class ASNTable(BaseTable):
     asn = tables.Column(
         linkify=True
     )
+    asn_asdot = tables.Column(
+        accessor=tables.A('asn_asdot'),
+        linkify=True,
+        verbose_name='ASDOT'
+    )
     site_count = LinkedCountColumn(
         viewname='dcim:site_list',
         url_params={'asn_id': 'pk'},
         verbose_name='Sites'
     )
+    tenant = TenantColumn()
+    tags = TagColumn(
+        url_name='ipam:asn_list'
+    )
+
     actions = ButtonsColumn(ASN)
 
     class Meta(BaseTable.Meta):
         model = ASN
-        fields = ('pk', 'asn', 'rir', 'site_count', 'tenant', 'description', 'actions')
-        default_columns = ('pk', 'asn', 'rir', 'site_count', 'sites', 'tenant', 'actions')
+        fields = (
+            'pk', 'asn', 'asn_asdot', 'rir', 'site_count', 'tenant', 'description', 'actions', 'created',
+            'last_updated', 'tags',
+        )
+        default_columns = ('pk', 'asn', 'rir', 'site_count', 'sites', 'description', 'tenant', 'actions')
 
 
 #
@@ -147,7 +163,10 @@ class AggregateTable(BaseTable):
 
     class Meta(BaseTable.Meta):
         model = Aggregate
-        fields = ('pk', 'id', 'prefix', 'rir', 'tenant', 'child_count', 'utilization', 'date_added', 'description', 'tags')
+        fields = (
+            'pk', 'id', 'prefix', 'rir', 'tenant', 'child_count', 'utilization', 'date_added', 'description', 'tags',
+            'created', 'last_updated',
+        )
         default_columns = ('pk', 'prefix', 'rir', 'tenant', 'child_count', 'utilization', 'date_added', 'description')
 
 
@@ -165,6 +184,11 @@ class RoleTable(BaseTable):
         url_params={'role_id': 'pk'},
         verbose_name='Prefixes'
     )
+    iprange_count = LinkedCountColumn(
+        viewname='ipam:iprange_list',
+        url_params={'role_id': 'pk'},
+        verbose_name='IP Ranges'
+    )
     vlan_count = LinkedCountColumn(
         viewname='ipam:vlan_list',
         url_params={'role_id': 'pk'},
@@ -177,8 +201,11 @@ class RoleTable(BaseTable):
 
     class Meta(BaseTable.Meta):
         model = Role
-        fields = ('pk', 'id', 'name', 'slug', 'prefix_count', 'vlan_count', 'description', 'weight', 'tags', 'actions')
-        default_columns = ('pk', 'name', 'prefix_count', 'vlan_count', 'description', 'actions')
+        fields = (
+            'pk', 'id', 'name', 'slug', 'prefix_count', 'iprange_count', 'vlan_count', 'description', 'weight', 'tags',
+            'actions', 'created', 'last_updated',
+        )
+        default_columns = ('pk', 'name', 'prefix_count', 'iprange_count', 'vlan_count', 'description', 'actions')
 
 
 #
@@ -264,8 +291,8 @@ class PrefixTable(BaseTable):
     class Meta(BaseTable.Meta):
         model = Prefix
         fields = (
-            'pk', 'id', 'prefix', 'prefix_flat', 'status', 'children', 'vrf', 'utilization', 'tenant', 'site', 'vlan_group',
-            'vlan', 'role', 'is_pool', 'mark_utilized', 'description', 'tags',
+            'pk', 'id', 'prefix', 'prefix_flat', 'status', 'children', 'vrf', 'utilization', 'tenant', 'site',
+            'vlan_group', 'vlan', 'role', 'is_pool', 'mark_utilized', 'description', 'tags', 'created', 'last_updated',
         )
         default_columns = (
             'pk', 'prefix', 'status', 'children', 'vrf', 'utilization', 'tenant', 'site', 'vlan', 'role', 'description',
@@ -306,7 +333,7 @@ class IPRangeTable(BaseTable):
         model = IPRange
         fields = (
             'pk', 'id', 'start_address', 'end_address', 'size', 'vrf', 'status', 'role', 'tenant', 'description',
-            'utilization', 'tags',
+            'utilization', 'tags', 'created', 'last_updated',
         )
         default_columns = (
             'pk', 'start_address', 'end_address', 'size', 'vrf', 'status', 'role', 'tenant', 'description',
@@ -341,7 +368,7 @@ class IPAddressTable(BaseTable):
         verbose_name='Interface'
     )
     assigned_object_parent = tables.Column(
-        accessor='assigned_object.parent_object',
+        accessor='assigned_object__parent_object',
         linkify=True,
         orderable=False,
         verbose_name='Device/VM'
@@ -364,7 +391,7 @@ class IPAddressTable(BaseTable):
         model = IPAddress
         fields = (
             'pk', 'id', 'address', 'vrf', 'status', 'role', 'tenant', 'nat_inside', 'assigned', 'dns_name', 'description',
-            'tags',
+            'tags', 'created', 'last_updated',
         )
         default_columns = (
             'pk', 'address', 'vrf', 'status', 'role', 'tenant', 'assigned', 'dns_name', 'description',
