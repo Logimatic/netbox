@@ -4,10 +4,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 
 from dcim.models import DeviceRole, DeviceType, Platform, Region, Site, SiteGroup
-from netbox.filtersets import BaseFilterSet, ChangeLoggedModelFilterSet
+from netbox.filtersets import BaseFilterSet, ChangeLoggedModelFilterSet, NetBoxModelFilterSet
 from tenancy.models import Tenant, TenantGroup
 from utilities.filters import ContentTypeFilter, MultiValueCharFilter, MultiValueNumberFilter
-from virtualization.models import Cluster, ClusterGroup
+from virtualization.models import Cluster, ClusterGroup, ClusterType
 from .choices import *
 from .models import *
 
@@ -62,7 +62,7 @@ class CustomFieldFilterSet(BaseFilterSet):
 
     class Meta:
         model = CustomField
-        fields = ['id', 'content_types', 'name', 'required', 'filter_logic', 'weight']
+        fields = ['id', 'content_types', 'name', 'required', 'filter_logic', 'weight', 'description']
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -82,7 +82,9 @@ class CustomLinkFilterSet(BaseFilterSet):
 
     class Meta:
         model = CustomLink
-        fields = ['id', 'content_type', 'name', 'link_text', 'link_url', 'weight', 'group_name', 'new_window']
+        fields = [
+            'id', 'content_type', 'name', 'enabled', 'link_text', 'link_url', 'weight', 'group_name', 'new_window',
+        ]
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -103,7 +105,7 @@ class ExportTemplateFilterSet(BaseFilterSet):
 
     class Meta:
         model = ExportTemplate
-        fields = ['id', 'content_type', 'name']
+        fields = ['id', 'content_type', 'name', 'description']
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -132,11 +134,7 @@ class ImageAttachmentFilterSet(BaseFilterSet):
         return queryset.filter(name__icontains=value)
 
 
-class JournalEntryFilterSet(ChangeLoggedModelFilterSet):
-    q = django_filters.CharFilter(
-        method='search',
-        label='Search',
-    )
+class JournalEntryFilterSet(NetBoxModelFilterSet):
     created = django_filters.DateTimeFromToRangeFilter()
     assigned_object_type = ContentTypeFilter()
     created_by_id = django_filters.ModelMultipleChoiceFilter(
@@ -177,14 +175,15 @@ class TagFilterSet(ChangeLoggedModelFilterSet):
 
     class Meta:
         model = Tag
-        fields = ['id', 'name', 'slug', 'color']
+        fields = ['id', 'name', 'slug', 'color', 'description']
 
     def search(self, queryset, name, value):
         if not value.strip():
             return queryset
         return queryset.filter(
             Q(name__icontains=value) |
-            Q(slug__icontains=value)
+            Q(slug__icontains=value) |
+            Q(description__icontains=value)
         )
 
     def _content_type(self, queryset, name, values):
@@ -279,6 +278,17 @@ class ConfigContextFilterSet(ChangeLoggedModelFilterSet):
         to_field_name='slug',
         label='Platform (slug)',
     )
+    cluster_type_id = django_filters.ModelMultipleChoiceFilter(
+        field_name='cluster_types',
+        queryset=ClusterType.objects.all(),
+        label='Cluster type',
+    )
+    cluster_type = django_filters.ModelMultipleChoiceFilter(
+        field_name='cluster_types__slug',
+        queryset=ClusterType.objects.all(),
+        to_field_name='slug',
+        label='Cluster type (slug)',
+    )
     cluster_group_id = django_filters.ModelMultipleChoiceFilter(
         field_name='cluster_groups',
         queryset=ClusterGroup.objects.all(),
@@ -316,6 +326,11 @@ class ConfigContextFilterSet(ChangeLoggedModelFilterSet):
         queryset=Tenant.objects.all(),
         to_field_name='slug',
         label='Tenant (slug)',
+    )
+    tag_id = django_filters.ModelMultipleChoiceFilter(
+        field_name='tags',
+        queryset=Tag.objects.all(),
+        label='Tag',
     )
     tag = django_filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',

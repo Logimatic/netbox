@@ -49,7 +49,7 @@ NetBox runs as a web application atop the [Django](https://www.djangoproject.com
 Python framework with a [PostgreSQL](https://www.postgresql.org/) database. For a
 complete list of requirements, see `requirements.txt`. The code is available [on GitHub](https://github.com/netbox-community/netbox).
 
-The complete documentation for NetBox can be found at [Read the Docs](https://netbox.readthedocs.io/en/stable/). A public demo instance is available at https://demo.netbox.dev.
+The complete documentation for NetBox can be found at [docs.netbox.dev](https://docs.netbox.dev/). A public demo instance is available at https://demo.netbox.dev.
 
 <div align="center">
   <h4>Thank you to our sponsors!</h4>
@@ -60,6 +60,8 @@ The complete documentation for NetBox can be found at [Read the Docs](https://ne
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   [![NS1](https://raw.githubusercontent.com/wiki/netbox-community/netbox/images/sponsors/ns1.png)](https://ns1.com/)
   <br />
+  [![Sentry](https://raw.githubusercontent.com/wiki/netbox-community/netbox/images/sponsors/sentry.png)](https://sentry.io/)
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   [![Stellar Technologies](https://raw.githubusercontent.com/wiki/netbox-community/netbox/images/sponsors/stellar.png)](https://stellar.tech/)
 
 </div>
@@ -68,11 +70,10 @@ The complete documentation for NetBox can be found at [Read the Docs](https://ne
 
 * [GitHub Discussions](https://github.com/netbox-community/netbox/discussions) - Discussion forum hosted by GitHub; ideal for Q&A and other structured discussions
 * [Slack](https://netdev.chat/) - Real-time chat hosted by the NetDev Community; best for unstructured discussion or just hanging out
-* [Google Group](https://groups.google.com/g/netbox-discuss) - Legacy mailing list; slowly being replaced by GitHub discussions
 
 ### Installation
 
-Please see [the documentation](https://netbox.readthedocs.io/en/stable/) for
+Please see [the documentation](https://docs.netbox.dev/) for
 instructions on installing NetBox. To upgrade NetBox, please download the
 [latest release](https://github.com/netbox-community/netbox/releases) and
 run `upgrade.sh`.

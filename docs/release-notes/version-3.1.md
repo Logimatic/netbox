@@ -1,5 +1,104 @@
 # NetBox v3.1
 
+## v3.1.11 (2022-04-05)
+
+### Enhancements
+
+* [#8163](https://github.com/netbox-community/netbox/issues/8163) - Show bridge interface members under interface view
+* [#8365](https://github.com/netbox-community/netbox/issues/8365) - Enable filtering child devices by parent device ID
+* [#8785](https://github.com/netbox-community/netbox/issues/8785) - Permit wildcard values in IP address DNS names
+* [#8790](https://github.com/netbox-community/netbox/issues/8790) - Include site and prefixes columns in VLAN group VLANs table
+* [#8830](https://github.com/netbox-community/netbox/issues/8830) - Add Checkpoint ClusterXL protocol for FHRP groups
+* [#8974](https://github.com/netbox-community/netbox/issues/8974) - Use monospace font for text areas in config revision form
+* [#9012](https://github.com/netbox-community/netbox/issues/9012) - Linkify circuits count in providers list
+* [#9036](https://github.com/netbox-community/netbox/issues/9036) - Add bulk edit capability for site contact fields
+
+### Bug Fixes
+
+* [#8866](https://github.com/netbox-community/netbox/issues/8866) - Prevent exception when searching for a rack position with no rack specified under device edit view
+* [#9009](https://github.com/netbox-community/netbox/issues/9009) - Fix device count for racks in global search results
+
+---
+
+## v3.1.10 (2022-03-25)
+
+### Enhancements
+
+* [#8232](https://github.com/netbox-community/netbox/issues/8232) - Use a different color for 100% utilization bars
+* [#8457](https://github.com/netbox-community/netbox/issues/8457) - Enable adding non-racked devices from site & location views
+* [#8553](https://github.com/netbox-community/netbox/issues/8553) - Add missing object types to global search form
+* [#8575](https://github.com/netbox-community/netbox/issues/8575) - Add rack columns to cables list
+* [#8645](https://github.com/netbox-community/netbox/issues/8645) - Enable filtering objects by assigned contacts & contact roles
+* [#8926](https://github.com/netbox-community/netbox/issues/8926) - Add device type, role columns to device bay table
+
+### Bug Fixes
+
+* [#8696](https://github.com/netbox-community/netbox/issues/8696) - Fix help link under FHRP group assigment creation view
+* [#8813](https://github.com/netbox-community/netbox/issues/8813) - Retain global search bar query after submitting
+* [#8820](https://github.com/netbox-community/netbox/issues/8820) - Fix navbar background color in dark mode
+* [#8850](https://github.com/netbox-community/netbox/issues/8850) - Show airflow field on device REST API serializer when config context data is included
+* [#8905](https://github.com/netbox-community/netbox/issues/8905) - Disable ordering by assigned tags to prevent erroneous results
+* [#8919](https://github.com/netbox-community/netbox/issues/8919) - Fix filtering of VLAN groups by site under prefix edit form
+* [#8924](https://github.com/netbox-community/netbox/issues/8924) - Improve load time of custom script list
+* [#8932](https://github.com/netbox-community/netbox/issues/8932) - Fix error when setting null value for interface `rf_role` via REST API
+* [#8935](https://github.com/netbox-community/netbox/issues/8935) - Correct ordering of next/previous racks to use naturalized names
+* [#8947](https://github.com/netbox-community/netbox/issues/8947) - Retain filter parameters when handling an export template exception
+* [#8951](https://github.com/netbox-community/netbox/issues/8951) - Allow changing device type & platform to different manufacturer simultaneously
+* [#8952](https://github.com/netbox-community/netbox/issues/8952) - Device images in rear rack elevations should be hyperlinked
+
+---
+
+## v3.1.9 (2022-03-07)
+
+### Enhancements
+
+* [#8594](https://github.com/netbox-community/netbox/issues/8594) - Enable filtering by exact description match for all applicable models
+* [#8629](https://github.com/netbox-community/netbox/issues/8629) - Add description to tag table search function
+* [#8664](https://github.com/netbox-community/netbox/issues/8664) - Show assigned ASNs/sites under list views
+* [#8736](https://github.com/netbox-community/netbox/issues/8736) - Add PC and UPC fiber end faces for LC/SC/LSH port types
+* [#8758](https://github.com/netbox-community/netbox/issues/8758) - Allow empty string substitution when renaming objects in bulk
+* [#8762](https://github.com/netbox-community/netbox/issues/8762) - Link to rack elevations list from site view
+* [#8766](https://github.com/netbox-community/netbox/issues/8766) - Add SCTP to service protocols list
+
+### Bug Fixes
+
+* [#8546](https://github.com/netbox-community/netbox/issues/8546) - Fix bulk import to restrict bridge, parent, and LAG to device interfaces
+* [#8633](https://github.com/netbox-community/netbox/issues/8633) - Prevent navigation sidebar pin from disappearing at certain breakpoints
+* [#8674](https://github.com/netbox-community/netbox/issues/8674) - Fix rendering of tabbed content in documentation
+* [#8710](https://github.com/netbox-community/netbox/issues/8710) - Fix dynamic scope selection form fields when creating a VLAN group
+* [#8713](https://github.com/netbox-community/netbox/issues/8713) - Restore missing "add" button on services list view
+* [#8715](https://github.com/netbox-community/netbox/issues/8715) - Avoid returning multiple objects when restricting querysets using multiple tags in permissions
+* [#8717](https://github.com/netbox-community/netbox/issues/8717) - Fix redirection after bulk edit/delete of prefixes from aggregate view
+* [#8724](https://github.com/netbox-community/netbox/issues/8724) - Fix exception during device import with invalid device type
+* [#8807](https://github.com/netbox-community/netbox/issues/8807) - Correct REST API URL for FHRP group assignments
+* [#8808](https://github.com/netbox-community/netbox/issues/8808) - Fix members count under FHRP group list
+
+---
+
+## v3.1.8 (2022-02-15)
+
+### Enhancements
+
+* [#7150](https://github.com/netbox-community/netbox/issues/7150) - Linkify devices on the far side of a rack elevation
+* [#8398](https://github.com/netbox-community/netbox/issues/8398) - Embiggen configuration form fields for banner message content
+* [#8556](https://github.com/netbox-community/netbox/issues/8556) - Add full username column to changelog table
+* [#8620](https://github.com/netbox-community/netbox/issues/8620) - Enable tab completion for `nbshell`
+
+### Bug Fixes
+
+* [#8331](https://github.com/netbox-community/netbox/issues/8331) - Implement `replaceAll` string utility function to improve browser compatibility
+* [#8391](https://github.com/netbox-community/netbox/issues/8391) - Null date columns should return empty strings during CSV export
+* [#8548](https://github.com/netbox-community/netbox/issues/8548) - Fix display of VC members when position is zero
+* [#8561](https://github.com/netbox-community/netbox/issues/8561) - Include option to connect a rear port to a console port
+* [#8564](https://github.com/netbox-community/netbox/issues/8564) - Fix errant table configuration key `available_columns`
+* [#8577](https://github.com/netbox-community/netbox/issues/8577) - Show contact assignment counts in global search results
+* [#8578](https://github.com/netbox-community/netbox/issues/8578) - Object change log tables should honor user's configured preferences
+* [#8604](https://github.com/netbox-community/netbox/issues/8604) - Fix tag filter on config context list filter form
+* [#8609](https://github.com/netbox-community/netbox/issues/8609) - Display validation error when attempting to assign VLANs to interface with no mode during bulk edit
+* [#8611](https://github.com/netbox-community/netbox/issues/8611) - Fix bulk editing for certain custom link, webhook, and journal entry fields
+
+---
+
 ## v3.1.7 (2022-02-03)
 
 ### Enhancements

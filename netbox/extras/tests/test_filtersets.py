@@ -12,7 +12,7 @@ from extras.filtersets import *
 from extras.models import *
 from ipam.models import IPAddress
 from tenancy.models import Tenant, TenantGroup
-from utilities.testing import BaseFilterSetTests, ChangeLoggedFilterSetTests
+from utilities.testing import BaseFilterSetTests, ChangeLoggedFilterSetTests, create_tags
 from virtualization.models import Cluster, ClusterGroup, ClusterType
 
 
@@ -100,6 +100,7 @@ class CustomLinkTestCase(TestCase, BaseFilterSetTests):
             CustomLink(
                 name='Custom Link 1',
                 content_type=content_types[0],
+                enabled=True,
                 weight=100,
                 new_window=False,
                 link_text='Link 1',
@@ -108,6 +109,7 @@ class CustomLinkTestCase(TestCase, BaseFilterSetTests):
             CustomLink(
                 name='Custom Link 2',
                 content_type=content_types[1],
+                enabled=True,
                 weight=200,
                 new_window=False,
                 link_text='Link 1',
@@ -116,6 +118,7 @@ class CustomLinkTestCase(TestCase, BaseFilterSetTests):
             CustomLink(
                 name='Custom Link 3',
                 content_type=content_types[2],
+                enabled=False,
                 weight=300,
                 new_window=True,
                 link_text='Link 1',
@@ -136,6 +139,12 @@ class CustomLinkTestCase(TestCase, BaseFilterSetTests):
         params = {'weight': [100, 200]}
         self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
 
+    def test_enabled(self):
+        params = {'enabled': True}
+        self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
+        params = {'enabled': False}
+        self.assertEqual(self.filterset(params, self.queryset).qs.count(), 1)
+
     def test_new_window(self):
         params = {'new_window': False}
         self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
@@ -153,8 +162,8 @@ class ExportTemplateTestCase(TestCase, BaseFilterSetTests):
         content_types = ContentType.objects.filter(model__in=['site', 'rack', 'device'])
 
         export_templates = (
-            ExportTemplate(name='Export Template 1', content_type=content_types[0], template_code='TESTING'),
-            ExportTemplate(name='Export Template 2', content_type=content_types[1], template_code='TESTING'),
+            ExportTemplate(name='Export Template 1', content_type=content_types[0], template_code='TESTING', description='foobar1'),
+            ExportTemplate(name='Export Template 2', content_type=content_types[1], template_code='TESTING', description='foobar2'),
             ExportTemplate(name='Export Template 3', content_type=content_types[2], template_code='TESTING'),
         )
         ExportTemplate.objects.bulk_create(export_templates)
@@ -166,6 +175,10 @@ class ExportTemplateTestCase(TestCase, BaseFilterSetTests):
     def test_content_type(self):
         params = {'content_type': ContentType.objects.get(model='site').pk}
         self.assertEqual(self.filterset(params, self.queryset).qs.count(), 1)
+
+    def test_description(self):
+        params = {'description': ['foobar1', 'foobar2']}
+        self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
 
 
 class ImageAttachmentTestCase(TestCase, BaseFilterSetTests):
@@ -399,6 +412,13 @@ class ConfigContextTestCase(TestCase, ChangeLoggedFilterSetTests):
         )
         Platform.objects.bulk_create(platforms)
 
+        cluster_types = (
+            ClusterType(name='Cluster Type 1', slug='cluster-type-1'),
+            ClusterType(name='Cluster Type 2', slug='cluster-type-2'),
+            ClusterType(name='Cluster Type 3', slug='cluster-type-3'),
+        )
+        ClusterType.objects.bulk_create(cluster_types)
+
         cluster_groups = (
             ClusterGroup(name='Cluster Group 1', slug='cluster-group-1'),
             ClusterGroup(name='Cluster Group 2', slug='cluster-group-2'),
@@ -406,11 +426,10 @@ class ConfigContextTestCase(TestCase, ChangeLoggedFilterSetTests):
         )
         ClusterGroup.objects.bulk_create(cluster_groups)
 
-        cluster_type = ClusterType.objects.create(name='Cluster Type 1', slug='cluster-type-1')
         clusters = (
-            Cluster(name='Cluster 1', type=cluster_type),
-            Cluster(name='Cluster 2', type=cluster_type),
-            Cluster(name='Cluster 3', type=cluster_type),
+            Cluster(name='Cluster 1', type=cluster_types[0]),
+            Cluster(name='Cluster 2', type=cluster_types[1]),
+            Cluster(name='Cluster 3', type=cluster_types[2]),
         )
         Cluster.objects.bulk_create(clusters)
 
@@ -429,6 +448,8 @@ class ConfigContextTestCase(TestCase, ChangeLoggedFilterSetTests):
         )
         Tenant.objects.bulk_create(tenants)
 
+        tags = create_tags('Alpha', 'Bravo', 'Charlie')
+
         for i in range(0, 3):
             is_active = bool(i % 2)
             c = ConfigContext.objects.create(
@@ -442,10 +463,12 @@ class ConfigContextTestCase(TestCase, ChangeLoggedFilterSetTests):
             c.device_types.set([device_types[i]])
             c.roles.set([device_roles[i]])
             c.platforms.set([platforms[i]])
+            c.cluster_types.set([cluster_types[i]])
             c.cluster_groups.set([cluster_groups[i]])
             c.clusters.set([clusters[i]])
             c.tenant_groups.set([tenant_groups[i]])
             c.tenants.set([tenants[i]])
+            c.tags.set([tags[i]])
 
     def test_name(self):
         params = {'name': ['Config Context 1', 'Config Context 2']}
@@ -504,6 +527,13 @@ class ConfigContextTestCase(TestCase, ChangeLoggedFilterSetTests):
         params = {'cluster_group': [cluster_groups[0].slug, cluster_groups[1].slug]}
         self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
 
+    def test_cluster_type(self):
+        cluster_types = ClusterType.objects.all()[:2]
+        params = {'cluster_type_id': [cluster_types[0].pk, cluster_types[1].pk]}
+        self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
+        params = {'cluster_type': [cluster_types[0].slug, cluster_types[1].slug]}
+        self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
+
     def test_cluster(self):
         clusters = Cluster.objects.all()[:2]
         params = {'cluster_id': [clusters[0].pk, clusters[1].pk]}
@@ -516,11 +546,18 @@ class ConfigContextTestCase(TestCase, ChangeLoggedFilterSetTests):
         params = {'tenant_group': [tenant_groups[0].slug, tenant_groups[1].slug]}
         self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
 
-    def test_tenant_(self):
+    def test_tenant(self):
         tenants = Tenant.objects.all()[:2]
         params = {'tenant_id': [tenants[0].pk, tenants[1].pk]}
         self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
         params = {'tenant': [tenants[0].slug, tenants[1].slug]}
+        self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
+
+    def test_tags(self):
+        tags = Tag.objects.all()[:2]
+        params = {'tag_id': [tags[0].pk, tags[1].pk]}
+        self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
+        params = {'tag': [tags[0].slug, tags[1].slug]}
         self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
 
 
@@ -532,8 +569,8 @@ class TagTestCase(TestCase, ChangeLoggedFilterSetTests):
     def setUpTestData(cls):
 
         tags = (
-            Tag(name='Tag 1', slug='tag-1', color='ff0000'),
-            Tag(name='Tag 2', slug='tag-2', color='00ff00'),
+            Tag(name='Tag 1', slug='tag-1', color='ff0000', description='foobar1'),
+            Tag(name='Tag 2', slug='tag-2', color='00ff00', description='foobar2'),
             Tag(name='Tag 3', slug='tag-3', color='0000ff'),
         )
         Tag.objects.bulk_create(tags)
@@ -555,6 +592,10 @@ class TagTestCase(TestCase, ChangeLoggedFilterSetTests):
 
     def test_color(self):
         params = {'color': ['ff0000', '00ff00']}
+        self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
+
+    def test_description(self):
+        params = {'description': ['foobar1', 'foobar2']}
         self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
 
     def test_content_type(self):

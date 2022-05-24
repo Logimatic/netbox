@@ -4,6 +4,7 @@ from circuits.choices import *
 from circuits.filtersets import *
 from circuits.models import *
 from dcim.models import Cable, Region, Site, SiteGroup
+from ipam.models import ASN, RIR
 from tenancy.models import Tenant, TenantGroup
 from utilities.testing import ChangeLoggedFilterSetTests
 
@@ -15,6 +16,14 @@ class ProviderTestCase(TestCase, ChangeLoggedFilterSetTests):
     @classmethod
     def setUpTestData(cls):
 
+        rir = RIR.objects.create(name='RFC 6996', is_private=True)
+        asns = (
+            ASN(asn=64512, rir=rir),
+            ASN(asn=64513, rir=rir),
+            ASN(asn=64514, rir=rir),
+        )
+        ASN.objects.bulk_create(asns)
+
         providers = (
             Provider(name='Provider 1', slug='provider-1', asn=65001, account='1234'),
             Provider(name='Provider 2', slug='provider-2', asn=65002, account='2345'),
@@ -23,6 +32,9 @@ class ProviderTestCase(TestCase, ChangeLoggedFilterSetTests):
             Provider(name='Provider 5', slug='provider-5', asn=65005, account='5678'),
         )
         Provider.objects.bulk_create(providers)
+        providers[0].asns.set([asns[0]])
+        providers[1].asns.set([asns[1]])
+        providers[2].asns.set([asns[2]])
 
         regions = (
             Region(name='Test Region 1', slug='test-region-1'),
@@ -70,8 +82,13 @@ class ProviderTestCase(TestCase, ChangeLoggedFilterSetTests):
         params = {'slug': ['provider-1', 'provider-2']}
         self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
 
-    def test_asn(self):
+    def test_asn(self):  # Legacy field
         params = {'asn': ['65001', '65002']}
+        self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
+
+    def test_asn_id(self):  # ASN object assignment
+        asns = ASN.objects.all()[:2]
+        params = {'asn_id': [asns[0].pk, asns[1].pk]}
         self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
 
     def test_account(self):
@@ -108,8 +125,8 @@ class CircuitTypeTestCase(TestCase, ChangeLoggedFilterSetTests):
     def setUpTestData(cls):
 
         CircuitType.objects.bulk_create((
-            CircuitType(name='Circuit Type 1', slug='circuit-type-1'),
-            CircuitType(name='Circuit Type 2', slug='circuit-type-2'),
+            CircuitType(name='Circuit Type 1', slug='circuit-type-1', description='foobar1'),
+            CircuitType(name='Circuit Type 2', slug='circuit-type-2', description='foobar2'),
             CircuitType(name='Circuit Type 3', slug='circuit-type-3'),
         ))
 
@@ -120,6 +137,10 @@ class CircuitTypeTestCase(TestCase, ChangeLoggedFilterSetTests):
     def test_slug(self):
         params = {'slug': ['circuit-type-1']}
         self.assertEqual(self.filterset(params, self.queryset).qs.count(), 1)
+
+    def test_description(self):
+        params = {'description': ['foobar1', 'foobar2']}
+        self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
 
 
 class CircuitTestCase(TestCase, ChangeLoggedFilterSetTests):
@@ -187,8 +208,8 @@ class CircuitTestCase(TestCase, ChangeLoggedFilterSetTests):
         ProviderNetwork.objects.bulk_create(provider_networks)
 
         circuits = (
-            Circuit(provider=providers[0], tenant=tenants[0], type=circuit_types[0], cid='Test Circuit 1', install_date='2020-01-01', commit_rate=1000, status=CircuitStatusChoices.STATUS_ACTIVE),
-            Circuit(provider=providers[0], tenant=tenants[0], type=circuit_types[0], cid='Test Circuit 2', install_date='2020-01-02', commit_rate=2000, status=CircuitStatusChoices.STATUS_ACTIVE),
+            Circuit(provider=providers[0], tenant=tenants[0], type=circuit_types[0], cid='Test Circuit 1', install_date='2020-01-01', commit_rate=1000, status=CircuitStatusChoices.STATUS_ACTIVE, description='foobar1'),
+            Circuit(provider=providers[0], tenant=tenants[0], type=circuit_types[0], cid='Test Circuit 2', install_date='2020-01-02', commit_rate=2000, status=CircuitStatusChoices.STATUS_ACTIVE, description='foobar2'),
             Circuit(provider=providers[0], tenant=tenants[1], type=circuit_types[0], cid='Test Circuit 3', install_date='2020-01-03', commit_rate=3000, status=CircuitStatusChoices.STATUS_PLANNED),
             Circuit(provider=providers[1], tenant=tenants[1], type=circuit_types[1], cid='Test Circuit 4', install_date='2020-01-04', commit_rate=4000, status=CircuitStatusChoices.STATUS_PLANNED),
             Circuit(provider=providers[1], tenant=tenants[2], type=circuit_types[1], cid='Test Circuit 5', install_date='2020-01-05', commit_rate=5000, status=CircuitStatusChoices.STATUS_OFFLINE),
@@ -240,6 +261,10 @@ class CircuitTestCase(TestCase, ChangeLoggedFilterSetTests):
     def test_status(self):
         params = {'status': [CircuitStatusChoices.STATUS_ACTIVE, CircuitStatusChoices.STATUS_PLANNED]}
         self.assertEqual(self.filterset(params, self.queryset).qs.count(), 4)
+
+    def test_description(self):
+        params = {'description': ['foobar1', 'foobar2']}
+        self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
 
     def test_region(self):
         regions = Region.objects.all()[:2]
@@ -319,8 +344,8 @@ class CircuitTerminationTestCase(TestCase, ChangeLoggedFilterSetTests):
         Circuit.objects.bulk_create(circuits)
 
         circuit_terminations = ((
-            CircuitTermination(circuit=circuits[0], site=sites[0], term_side='A', port_speed=1000, upstream_speed=1000, xconnect_id='ABC'),
-            CircuitTermination(circuit=circuits[0], site=sites[1], term_side='Z', port_speed=1000, upstream_speed=1000, xconnect_id='DEF'),
+            CircuitTermination(circuit=circuits[0], site=sites[0], term_side='A', port_speed=1000, upstream_speed=1000, xconnect_id='ABC', description='foobar1'),
+            CircuitTermination(circuit=circuits[0], site=sites[1], term_side='Z', port_speed=1000, upstream_speed=1000, xconnect_id='DEF', description='foobar2'),
             CircuitTermination(circuit=circuits[1], site=sites[1], term_side='A', port_speed=2000, upstream_speed=2000, xconnect_id='GHI'),
             CircuitTermination(circuit=circuits[1], site=sites[2], term_side='Z', port_speed=2000, upstream_speed=2000, xconnect_id='JKL'),
             CircuitTermination(circuit=circuits[2], site=sites[2], term_side='A', port_speed=3000, upstream_speed=3000, xconnect_id='MNO'),
@@ -347,6 +372,10 @@ class CircuitTerminationTestCase(TestCase, ChangeLoggedFilterSetTests):
 
     def test_xconnect_id(self):
         params = {'xconnect_id': ['ABC', 'DEF']}
+        self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
+
+    def test_description(self):
+        params = {'description': ['foobar1', 'foobar2']}
         self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
 
     def test_circuit_id(self):
@@ -386,14 +415,18 @@ class ProviderNetworkTestCase(TestCase, ChangeLoggedFilterSetTests):
         Provider.objects.bulk_create(providers)
 
         provider_networks = (
-            ProviderNetwork(name='Provider Network 1', provider=providers[0]),
-            ProviderNetwork(name='Provider Network 2', provider=providers[1]),
+            ProviderNetwork(name='Provider Network 1', provider=providers[0], description='foobar1'),
+            ProviderNetwork(name='Provider Network 2', provider=providers[1], description='foobar2'),
             ProviderNetwork(name='Provider Network 3', provider=providers[2]),
         )
         ProviderNetwork.objects.bulk_create(provider_networks)
 
     def test_name(self):
         params = {'name': ['Provider Network 1', 'Provider Network 2']}
+        self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
+
+    def test_description(self):
+        params = {'description': ['foobar1', 'foobar2']}
         self.assertEqual(self.filterset(params, self.queryset).qs.count(), 2)
 
     def test_provider(self):

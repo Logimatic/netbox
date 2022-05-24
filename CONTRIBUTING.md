@@ -16,13 +16,6 @@ categories for discussions:
   feature request
 * **Q&A** - Request help with installing or using NetBox
 
-### Mailing List
-
-We also have a Google Groups [mailing list](https://groups.google.com/g/netbox-discuss)
-for general discussion, however we're encouraging people to use GitHub
-discussions where possible, as it's much easier for newcomers to review past
-discussions.
-
 ### Slack
 
 For real-time chat, you can join the **#netbox** Slack channel on [NetDev Community](https://netdev.chat/).
@@ -106,7 +99,7 @@ appropriate labels will be applied for categorization.
 ## Submitting Pull Requests
 
 * If you're interested in contributing to NetBox, be sure to check out our
-[getting started](https://netbox.readthedocs.io/en/stable/development/getting-started/)
+[getting started](https://docs.netbox.dev/en/stable/development/getting-started/)
 documentation for tips on setting up your development environment.
 
 * Be sure to open an issue **before** starting work on a pull request, and
@@ -178,7 +171,7 @@ an effort to circumvent the bot: Doing so will not remove the stale label.
   the understanding that all contributions are submitted under the Apache 2.0
   license and that your employer may not make claim to any contributions.
   Contributions include code work, issue management, and community support. All
-  development must be in accordance with our [development guidance](https://netbox.readthedocs.io/en/stable/development/).
+  development must be in accordance with our [development guidance](https://docs.netbox.dev/en/stable/development/).
 
 * Maintainers are expected to attend (where feasible) our biweekly ~30-minute
   sync to review agenda items. This meeting provides opportunity to present and

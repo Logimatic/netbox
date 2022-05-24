@@ -126,10 +126,16 @@ class RackElevationSVG:
             link.add(drawing.text(str(name), insert=text, fill='white', class_='device-image-label'))
 
     def _draw_device_rear(self, drawing, device, start, end, text):
-        rect = drawing.rect(start, end, class_="slot blocked")
-        rect.set_desc(self._get_device_description(device))
-        drawing.add(rect)
-        drawing.add(drawing.text(get_device_name(device), insert=text))
+        link = drawing.add(
+            drawing.a(
+                href='{}{}'.format(self.base_url, reverse('dcim:device', kwargs={'pk': device.pk})),
+                target='_top',
+                fill='black'
+            )
+        )
+        link.set_desc(self._get_device_description(device))
+        link.add(drawing.rect(start, end, class_="slot blocked"))
+        link.add(drawing.text(get_device_name(device), insert=text))
 
         # Embed rear device type image if one exists
         if self.include_images and device.device_type.rear_image:
@@ -140,10 +146,10 @@ class RackElevationSVG:
                 class_='device-image'
             )
             image.fit(scale='slice')
-            drawing.add(image)
-            drawing.add(drawing.text(get_device_name(device), insert=text, stroke='black',
-                        stroke_width='0.2em', stroke_linejoin='round', class_='device-image-label'))
-            drawing.add(drawing.text(get_device_name(device), insert=text, fill='white', class_='device-image-label'))
+            link.add(image)
+            link.add(drawing.text(get_device_name(device), insert=text, stroke='black',
+                     stroke_width='0.2em', stroke_linejoin='round', class_='device-image-label'))
+            link.add(drawing.text(get_device_name(device), insert=text, fill='white', class_='device-image-label'))
 
     @staticmethod
     def _draw_empty(drawing, rack, start, end, text, id_, face_id, class_, reservation):
