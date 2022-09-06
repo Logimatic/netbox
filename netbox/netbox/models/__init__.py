@@ -2,6 +2,7 @@ from django.core.validators import ValidationError
 from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
 
+from extras.utils import is_taggable
 from utilities.mptt import TreeManager
 from utilities.querysets import RestrictedQuerySet
 from netbox.models.features import *
@@ -27,6 +28,14 @@ class NetBoxFeatureSet(
     class Meta:
         abstract = True
 
+    @classmethod
+    def get_prerequisite_models(cls):
+        """
+        Return a list of model types that are required to create this model or empty list if none.  This is used for
+        showing prequisite warnings in the UI on the list and detail views.
+        """
+        return []
+
 
 #
 # Base model classes
@@ -51,6 +60,25 @@ class NetBoxModel(NetBoxFeatureSet, models.Model):
 
     class Meta:
         abstract = True
+
+    def clone(self):
+        """
+        Return a dictionary of attributes suitable for creating a copy of the current instance. This is used for pre-
+        populating an object creation form in the UI.
+        """
+        attrs = {}
+
+        for field_name in getattr(self, 'clone_fields', []):
+            field = self._meta.get_field(field_name)
+            field_value = field.value_from_object(self)
+            if field_value not in (None, ''):
+                attrs[field_name] = field_value
+
+        # Include tags (if applicable)
+        if is_taggable(self):
+            attrs['tags'] = [tag.pk for tag in self.tags.all()]
+
+        return attrs
 
 
 class NestedGroupModel(NetBoxFeatureSet, MPTTModel):
@@ -89,9 +117,9 @@ class NestedGroupModel(NetBoxFeatureSet, MPTTModel):
         super().clean()
 
         # An MPTT model cannot be its own parent
-        if self.pk and self.parent_id == self.pk:
+        if self.pk and self.parent and self.parent in self.get_descendants(include_self=True):
             raise ValidationError({
-                "parent": "Cannot assign self as parent."
+                "parent": f"Cannot assign self or child {self._meta.verbose_name} as parent."
             })
 
 
