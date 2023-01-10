@@ -55,14 +55,18 @@ class RackTypeChoices(ChoiceSet):
     TYPE_4POST = '4-post-frame'
     TYPE_CABINET = '4-post-cabinet'
     TYPE_WALLFRAME = 'wall-frame'
+    TYPE_WALLFRAME_VERTICAL = 'wall-frame-vertical'
     TYPE_WALLCABINET = 'wall-cabinet'
+    TYPE_WALLCABINET_VERTICAL = 'wall-cabinet-vertical'
 
     CHOICES = (
         (TYPE_2POST, '2-post frame'),
         (TYPE_4POST, '4-post frame'),
         (TYPE_CABINET, '4-post cabinet'),
         (TYPE_WALLFRAME, 'Wall-mounted frame'),
+        (TYPE_WALLFRAME_VERTICAL, 'Wall-mounted frame (vertical)'),
         (TYPE_WALLCABINET, 'Wall-mounted cabinet'),
+        (TYPE_WALLCABINET_VERTICAL, 'Wall-mounted cabinet (vertical)'),
     )
 
 
@@ -192,6 +196,30 @@ class DeviceAirflowChoices(ChoiceSet):
         (AIRFLOW_PASSIVE, 'Passive'),
         (AIRFLOW_MIXED, 'Mixed'),
     )
+
+
+#
+# Modules
+#
+
+class ModuleStatusChoices(ChoiceSet):
+    key = 'Module.status'
+
+    STATUS_OFFLINE = 'offline'
+    STATUS_ACTIVE = 'active'
+    STATUS_PLANNED = 'planned'
+    STATUS_STAGED = 'staged'
+    STATUS_FAILED = 'failed'
+    STATUS_DECOMMISSIONING = 'decommissioning'
+
+    CHOICES = [
+        (STATUS_OFFLINE, 'Offline', 'gray'),
+        (STATUS_ACTIVE, 'Active', 'green'),
+        (STATUS_PLANNED, 'Planned', 'cyan'),
+        (STATUS_STAGED, 'Staged', 'blue'),
+        (STATUS_FAILED, 'Failed', 'red'),
+        (STATUS_DECOMMISSIONING, 'Decommissioning', 'yellow'),
+    ]
 
 
 #
@@ -787,6 +815,17 @@ class InterfaceTypeChoices(ChoiceSet):
     TYPE_100ME_SC = '100base-x-sc'
     TYPE_1000ME_SC = '1000base-x-sc'
 
+    # Ethernet Backplane
+    TYPE_1GE_KX = '1000base-kx'
+    TYPE_10GE_KR = '10gbase-kr'
+    TYPE_10GE_KX4 = '10gbase-kx4'
+    TYPE_25GE_KR = '25gbase-kr'
+    TYPE_40GE_KR4 = '40gbase-kr4'
+    TYPE_50GE_KR = '50gbase-kr'
+    TYPE_100GE_KP4 = '100gbase-kp4'
+    TYPE_100GE_KR2 = '100gbase-kr2'
+    TYPE_100GE_KR4 = '100gbase-kr4'
+
     # Wireless
     TYPE_80211A = 'ieee802.11a'
     TYPE_80211G = 'ieee802.11g'
@@ -917,6 +956,20 @@ class InterfaceTypeChoices(ChoiceSet):
                 (TYPE_400GE_OSFP, 'OSFP (400GE)'),
 		(TYPE_100ME_SC, 'SC (100ME)'),
 		(TYPE_1000ME_SC, 'SC (1GE)'),
+            )
+        ),
+        (
+            'Ethernet (backplane)',
+            (
+                (TYPE_1GE_KX, '1000BASE-KX (1GE)'),
+                (TYPE_10GE_KR, '10GBASE-KR (10GE)'),
+                (TYPE_10GE_KX4, '10GBASE-KX4 (10GE)'),
+                (TYPE_25GE_KR, '25GBASE-KR (25GE)'),
+                (TYPE_40GE_KR4, '40GBASE-KR4 (40GE)'),
+                (TYPE_50GE_KR, '50GBASE-KR (50GE)'),
+                (TYPE_100GE_KP4, '100GBASE-KP4 (100GE)'),
+                (TYPE_100GE_KR2, '100GBASE-KR2 (100GE)'),
+                (TYPE_100GE_KR4, '100GBASE-KR4 (100GE)'),
             )
         ),
         (
@@ -1104,7 +1157,7 @@ class InterfacePoETypeChoices(ChoiceSet):
                 (PASSIVE_24V_2PAIR, 'Passive 24V (2-pair)'),
                 (PASSIVE_24V_4PAIR, 'Passive 24V (4-pair)'),
                 (PASSIVE_48V_2PAIR, 'Passive 48V (2-pair)'),
-                (PASSIVE_48V_2PAIR, 'Passive 48V (4-pair)'),
+                (PASSIVE_48V_4PAIR, 'Passive 48V (4-pair)'),
             )
         ),
     )
@@ -1370,6 +1423,24 @@ class CableLengthUnitChoices(ChoiceSet):
     )
 
 
+class WeightUnitChoices(ChoiceSet):
+
+    # Metric
+    UNIT_KILOGRAM = 'kg'
+    UNIT_GRAM = 'g'
+
+    # Imperial
+    UNIT_POUND = 'lb'
+    UNIT_OUNCE = 'oz'
+
+    CHOICES = (
+        (UNIT_KILOGRAM, 'Kilograms'),
+        (UNIT_GRAM, 'Grams'),
+        (UNIT_POUND, 'Pounds'),
+        (UNIT_OUNCE, 'Ounces'),
+    )
+
+
 #
 # CableTerminations
 #
@@ -1437,3 +1508,20 @@ class PowerFeedPhaseChoices(ChoiceSet):
         (PHASE_SINGLE, 'Single phase'),
         (PHASE_3PHASE, 'Three-phase'),
     )
+
+
+#
+# VDC
+#
+class VirtualDeviceContextStatusChoices(ChoiceSet):
+    key = 'VirtualDeviceContext.status'
+
+    STATUS_ACTIVE = 'active'
+    STATUS_PLANNED = 'planned'
+    STATUS_OFFLINE = 'offline'
+
+    CHOICES = [
+        (STATUS_ACTIVE, 'Active', 'green'),
+        (STATUS_PLANNED, 'Planned', 'cyan'),
+        (STATUS_OFFLINE, 'Offline', 'red'),
+    ]
