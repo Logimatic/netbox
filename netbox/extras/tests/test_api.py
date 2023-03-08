@@ -101,6 +101,7 @@ class CustomFieldTest(APIViewTestCases.APIViewTestCase):
             'content_types': ['dcim.site'],
             'name': 'cf6',
             'type': 'select',
+            'choices': ['A', 'B', 'C']
         },
     ]
     bulk_update_data = {
@@ -590,6 +591,7 @@ class ScriptTest(APITestCase):
 
     @skipIf(not rq_worker_running, "RQ worker not running")
     def test_run_script(self):
+        self.add_permissions('extras.run_script')
 
         script_data = {
             'var1': 'FooBar',

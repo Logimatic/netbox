@@ -785,7 +785,10 @@ class InterfaceTypeChoices(ChoiceSet):
     TYPE_LAG = 'lag'
 
     # Ethernet
+    TYPE_100ME_FX = '100base-fx'
+    TYPE_100ME_LFX = '100base-lfx'
     TYPE_100ME_FIXED = '100base-tx'
+    TYPE_100ME_T1 = '100base-t1'
     TYPE_100ME_SFP = '100base-x-sfp'
     TYPE_1GE_FIXED = '1000base-t'
     TYPE_1GE_GBIC = '1000base-x-gbic'
@@ -812,6 +815,8 @@ class InterfaceTypeChoices(ChoiceSet):
     TYPE_200GE_QSFP56 = '200gbase-x-qsfp56'
     TYPE_400GE_QSFP_DD = '400gbase-x-qsfpdd'
     TYPE_400GE_OSFP = '400gbase-x-osfp'
+    TYPE_800GE_QSFP_DD = '800gbase-x-qsfpdd'
+    TYPE_800GE_OSFP = '800gbase-x-osfp'
     TYPE_100ME_SC = '100base-x-sc'
     TYPE_1000ME_SC = '1000base-x-sc'
 
@@ -922,7 +927,10 @@ class InterfaceTypeChoices(ChoiceSet):
         (
             'Ethernet (fixed)',
             (
+                (TYPE_100ME_FX, '100BASE-FX (10/100ME FIBER)'),
+                (TYPE_100ME_LFX, '100BASE-LFX (10/100ME FIBER)'),
                 (TYPE_100ME_FIXED, '100BASE-TX (10/100ME)'),
+                (TYPE_100ME_T1, '100BASE-T1 (10/100ME Single Pair)'),
                 (TYPE_1GE_FIXED, '1000BASE-T (1GE)'),
                 (TYPE_2GE_FIXED, '2.5GBASE-T (2.5GE)'),
                 (TYPE_5GE_FIXED, '5GBASE-T (5GE)'),
@@ -954,8 +962,11 @@ class InterfaceTypeChoices(ChoiceSet):
                 (TYPE_200GE_QSFP56, 'QSFP56 (200GE)'),
                 (TYPE_400GE_QSFP_DD, 'QSFP-DD (400GE)'),
                 (TYPE_400GE_OSFP, 'OSFP (400GE)'),
-		(TYPE_100ME_SC, 'SC (100ME)'),
-		(TYPE_1000ME_SC, 'SC (1GE)'),
+                (TYPE_800GE_QSFP_DD, 'QSFP-DD (800GE)'),
+                (TYPE_800GE_OSFP, 'OSFP (800GE)'),
+		            (TYPE_100ME_SC, 'SC (100ME)'),
+		            (TYPE_1000ME_SC, 'SC (1GE)'),
+
             )
         ),
         (
