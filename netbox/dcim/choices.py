@@ -789,10 +789,12 @@ class InterfaceTypeChoices(ChoiceSet):
     TYPE_100ME_LFX = '100base-lfx'
     TYPE_100ME_FIXED = '100base-tx'
     TYPE_100ME_T1 = '100base-t1'
+    TYPE_100ME_SFP = '100base-x-sfp'
     TYPE_1GE_FIXED = '1000base-t'
     TYPE_1GE_GBIC = '1000base-x-gbic'
     TYPE_1GE_SFP = '1000base-x-sfp'
-    TYPE_2GE_FIXED = '2.5gbase-t'
+    TYPE_2GE_FIXED = '2x5gbase-t'
+    TYPE_2x5GE_SFP = '2x5gbase-x-sfp'
     TYPE_5GE_FIXED = '5gbase-t'
     TYPE_10GE_FIXED = '10gbase-t'
     TYPE_10GE_CX4 = '10gbase-cx4'
@@ -815,6 +817,8 @@ class InterfaceTypeChoices(ChoiceSet):
     TYPE_400GE_OSFP = '400gbase-x-osfp'
     TYPE_800GE_QSFP_DD = '800gbase-x-qsfpdd'
     TYPE_800GE_OSFP = '800gbase-x-osfp'
+    TYPE_100ME_SC = '100base-x-sc'
+    TYPE_1000ME_SC = '1000base-x-sc'
 
     # Ethernet Backplane
     TYPE_1GE_KX = '1000base-kx'
@@ -937,8 +941,10 @@ class InterfaceTypeChoices(ChoiceSet):
         (
             'Ethernet (modular)',
             (
+		(TYPE_100ME_SFP, 'SFP (100ME FC)'),
                 (TYPE_1GE_GBIC, 'GBIC (1GE)'),
                 (TYPE_1GE_SFP, 'SFP (1GE)'),
+		(TYPE_2x5GE_SFP, 'SFP (2.5GE FC)'),
                 (TYPE_10GE_SFP_PLUS, 'SFP+ (10GE)'),
                 (TYPE_10GE_XFP, 'XFP (10GE)'),
                 (TYPE_10GE_XENPAK, 'XENPAK (10GE)'),
@@ -958,6 +964,9 @@ class InterfaceTypeChoices(ChoiceSet):
                 (TYPE_400GE_OSFP, 'OSFP (400GE)'),
                 (TYPE_800GE_QSFP_DD, 'QSFP-DD (800GE)'),
                 (TYPE_800GE_OSFP, 'OSFP (800GE)'),
+		            (TYPE_100ME_SC, 'SC (100ME)'),
+		            (TYPE_1000ME_SC, 'SC (1GE)'),
+
             )
         ),
         (
@@ -1307,7 +1316,55 @@ class CableTypeChoices(ChoiceSet):
     TYPE_AOC = 'aoc'
     TYPE_POWER = 'power'
 
+    # Logimatic specials
+
+    # CAT
+    TYPE_CAT6A_SFTP_LSZH = 'cat6a-sftp-lszh'
+    TYPE_CAT7_SFTP_LSZH = 'cat7-sftp-lszh'
+    # MMF
+    TYPE_MMF_OM3_LSZH = 'mmf-om3-lszh'
+    TYPE_MMF_OM3_LSZH_2x6 = 'mmf-om3-lszh-2x6'
+    TYPE_MMF_OM3_LSZH_lclc = 'mmf-om3-lszh-lclc'
+    TYPE_MMF_OM3_LSZH_lcsc = 'mmf-om3-lszh-lcsc'
+    TYPE_MMF_OM3_LSZH_lcst = 'mmf-om3-lszh-lcst'
+    TYPE_MMF_OM3_LSZH_scsc = 'mmf-om3-lszh-scsc'
+    TYPE_MMF_OM3_LSZH_stsc = 'mmf-om3-lszh-stsc'
+    TYPE_MMF_OM3_LSZH_stst = 'mmf-om3-lszh-stst'
+
+    TYPE_MMF_OM1_LSZH = 'mmf-om1-lszh'
+    TYPE_MMF_OM1_LSZH_2x4 = 'mmf-om1-lszh-2x4'
+    TYPE_MMF_OM1_LSZH_lclc = 'mmf-om1-lszh-lclc'
+    TYPE_MMF_OM1_LSZH_lcsc = 'mmf-om1-lszh-lcsc'
+    TYPE_MMF_OM1_LSZH_lcst = 'mmf-om1-lszh-lcst'
+    TYPE_MMF_OM1_LSZH_scsc = 'mmf-om1-lszh-scsc'
+    TYPE_MMF_OM1_LSZH_stsc = 'mmf-om1-lszh-stsc'
+    TYPE_MMF_OM1_LSZH_stst = 'mmf-om1-lszh-stst'
+
     CHOICES = (
+        (
+            'LMCE', (
+                (TYPE_CAT6A_SFTP_LSZH, 'CAT6a S/FTP LSZH'),
+                (TYPE_CAT7_SFTP_LSZH, 'CAT7 S/FTP LSZH'),
+
+                (TYPE_MMF_OM3_LSZH, 'MM Fiber (OM3) LSZH'),
+                (TYPE_MMF_OM3_LSZH_2x6, 'MM Fiber (OM3) LSZH 2x6'),
+                (TYPE_MMF_OM3_LSZH_lclc, 'MM Fiber (OM3) LSZH (LC/LC) patch'),
+                (TYPE_MMF_OM3_LSZH_lcsc, 'MM Fiber (OM3) LSZH (LC/SC) patch'),
+                (TYPE_MMF_OM3_LSZH_lcst, 'MM Fiber (OM3) LSZH (LC/ST) patch'),
+                (TYPE_MMF_OM3_LSZH_scsc, 'MM Fiber (OM3) LSZH (SC/SC) patch'),
+                (TYPE_MMF_OM3_LSZH_stsc, 'MM Fiber (OM3) LSZH (ST/SC) patch'),
+                (TYPE_MMF_OM3_LSZH_stst, 'MM Fiber (OM3) LSZH (ST/ST) patch'),
+
+                (TYPE_MMF_OM1_LSZH, 'MM Fiber (OM1) LSZH'),
+                (TYPE_MMF_OM1_LSZH_2x4, 'MM Fiber (OM1) LSZH 2x4'),
+                (TYPE_MMF_OM1_LSZH_lclc, 'MM Fiber (OM1) LSZH (LC/LC) patch'),
+                (TYPE_MMF_OM1_LSZH_lcsc, 'MM Fiber (OM1) LSZH (LC/SC) patch'),
+                (TYPE_MMF_OM1_LSZH_lcst, 'MM Fiber (OM1) LSZH (LC/ST) patch'),
+                (TYPE_MMF_OM1_LSZH_scsc, 'MM Fiber (OM1) LSZH (SC/SC) patch'),
+                (TYPE_MMF_OM1_LSZH_stsc, 'MM Fiber (OM1) LSZH (ST/SC) patch'),
+                (TYPE_MMF_OM1_LSZH_stst, 'MM Fiber (OM1) LSZH (ST/ST) patch'),
+            ),
+        ),
         (
             'Copper', (
                 (TYPE_CAT3, 'CAT3'),
