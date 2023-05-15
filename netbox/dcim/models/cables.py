@@ -13,7 +13,8 @@ from dcim.choices import *
 from dcim.constants import *
 from dcim.fields import PathField
 from dcim.utils import decompile_path_node, object_to_path_node
-from netbox.models import PrimaryModel
+from netbox.models import ChangeLoggedModel, PrimaryModel
+
 from utilities.fields import ColorField
 from utilities.querysets import RestrictedQuerySet
 from utilities.utils import to_meters
@@ -152,8 +153,6 @@ class Cable(PrimaryModel):
         # Validate length and length_unit
         if self.length is not None and not self.length_unit:
             raise ValidationError("Must specify a unit when setting a cable length")
-        elif self.length is None:
-            self.length_unit = ''
 
         if self.pk is None and (not self.a_terminations or not self.b_terminations):
             raise ValidationError("Must define A and B terminations when creating a new cable.")
@@ -186,6 +185,10 @@ class Cable(PrimaryModel):
             self._abs_length = to_meters(self.length, self.length_unit)
         else:
             self._abs_length = None
+
+        # Clear length_unit if no length is defined
+        if self.length is None:
+            self.length_unit = ''
 
         super().save(*args, **kwargs)
 
@@ -220,7 +223,7 @@ class Cable(PrimaryModel):
         return LinkStatusChoices.colors.get(self.status)
 
 
-class CableTermination(models.Model):
+class CableTermination(ChangeLoggedModel):
     """
     A mapping between side A or B of a Cable and a terminating object (e.g. an Interface or CircuitTermination).
     """
@@ -356,6 +359,11 @@ class CableTermination(models.Model):
         # Circuit terminations
         elif getattr(self.termination, 'site', None):
             self._site = self.termination.site
+
+    def to_objectchange(self, action):
+        objectchange = super().to_objectchange(action)
+        objectchange.related_object = self.termination
+        return objectchange
 
 
 class CablePath(models.Model):

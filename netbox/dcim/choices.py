@@ -906,6 +906,7 @@ class InterfaceTypeChoices(ChoiceSet):
     TYPE_STACKWISE160 = 'cisco-stackwise-160'
     TYPE_STACKWISE320 = 'cisco-stackwise-320'
     TYPE_STACKWISE480 = 'cisco-stackwise-480'
+    TYPE_STACKWISE1T = 'cisco-stackwise-1t'
     TYPE_JUNIPER_VCP = 'juniper-vcp'
     TYPE_SUMMITSTACK = 'extreme-summitstack'
     TYPE_SUMMITSTACK128 = 'extreme-summitstack-128'
@@ -1087,6 +1088,7 @@ class InterfaceTypeChoices(ChoiceSet):
                 (TYPE_STACKWISE160, 'Cisco StackWise-160'),
                 (TYPE_STACKWISE320, 'Cisco StackWise-320'),
                 (TYPE_STACKWISE480, 'Cisco StackWise-480'),
+                (TYPE_STACKWISE1T, 'Cisco StackWise-1T'),
                 (TYPE_JUNIPER_VCP, 'Juniper VCP'),
                 (TYPE_SUMMITSTACK, 'Extreme SummitStack'),
                 (TYPE_SUMMITSTACK128, 'Extreme SummitStack-128'),
@@ -1101,6 +1103,20 @@ class InterfaceTypeChoices(ChoiceSet):
             )
         ),
     )
+
+
+class InterfaceSpeedChoices(ChoiceSet):
+    key = 'Interface.speed'
+
+    CHOICES = [
+        (10000, '10 Mbps'),
+        (100000, '100 Mbps'),
+        (1000000, '1 Gbps'),
+        (10000000, '10 Gbps'),
+        (25000000, '25 Gbps'),
+        (40000000, '40 Gbps'),
+        (100000000, '100 Gbps'),
+    ]
 
 
 class InterfaceDuplexChoices(ChoiceSet):

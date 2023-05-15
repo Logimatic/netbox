@@ -4,7 +4,8 @@ from dcim.models import *
 from django.utils.translation import gettext as _
 from extras.forms import CustomFieldsMixin
 from extras.models import Tag
-from utilities.forms import BootstrapMixin, DynamicModelMultipleChoiceField, ExpandableNameField, form_from_model
+from utilities.forms import BootstrapMixin, form_from_model
+from utilities.forms.fields import DynamicModelMultipleChoiceField, ExpandableNameField
 from .object_create import ComponentCreateForm
 
 __all__ = (
@@ -103,9 +104,9 @@ class RearPortBulkCreateForm(
 
 class ModuleBayBulkCreateForm(DeviceBulkAddComponentForm):
     model = ModuleBay
-    field_order = ('name', 'label', 'position_pattern', 'description', 'tags')
+    field_order = ('name', 'label', 'position', 'description', 'tags')
     replication_fields = ('name', 'label', 'position')
-    position_pattern = ExpandableNameField(
+    position = ExpandableNameField(
         label=_('Position'),
         required=False,
         help_text=_('Alphanumeric ranges are supported. (Must match the number of names being created.)')

@@ -12,6 +12,7 @@ __all__ = (
     'expand_alphanumeric_pattern',
     'expand_ipaddress_pattern',
     'form_from_model',
+    'get_field_value',
     'get_selected_values',
     'parse_alphanumeric_range',
     'parse_numeric_range',
@@ -113,6 +114,21 @@ def expand_ipaddress_pattern(string, family):
             yield ''.join([lead, format(i, 'x' if family == 6 else 'd'), remnant])
 
 
+def get_field_value(form, field_name):
+    """
+    Return the current bound or initial value associated with a form field, prior to calling
+    clean() for the form.
+    """
+    field = form.fields[field_name]
+
+    if form.is_bound:
+        if data := form.data.get(field_name):
+            if field.valid_value(data):
+                return data
+
+    return form.get_initial_for_field(field, field_name)
+
+
 def get_selected_values(form, field_name):
     """
     Return the list of selected human-friendly values for a form field
@@ -195,10 +211,15 @@ def parse_csv(reader):
     # `site.slug` header, to indicate the related site is being referenced by its slug.
 
     for header in next(reader):
+        header = header.strip()
         if '.' in header:
             field, to_field = header.split('.', 1)
+            if field in headers:
+                raise forms.ValidationError(f'Duplicate or conflicting column header for "{field}"')
             headers[field] = to_field
         else:
+            if header in headers:
+                raise forms.ValidationError(f'Duplicate or conflicting column header for "{header}"')
             headers[header] = None
 
     # Parse CSV rows into a list of dictionaries mapped from the column headers.

@@ -584,11 +584,16 @@ Additionally, a token can be set to expire at a specific time. This can be usefu
 
 #### Client IP Restriction
 
-!!! note
-    This feature was introduced in NetBox v3.3.
-
 Each API token can optionally be restricted by client IP address. If one or more allowed IP prefixes/addresses is defined for a token, authentication will fail for any client connecting from an IP address outside the defined range(s). This enables restricting the use a token to a specific client. (By default, any client IP address is permitted.)
 
+#### Creating Tokens for Other Users
+
+It is possible to provision authentication tokens for other users via the REST API. To do, so the requesting user must have the `users.grant_token` permission assigned. While all users have inherent permission to create their own tokens, this permission is required to enable the creation of tokens for other users.
+
+![Adding the grant action to a permission](../media/admin_ui_grant_permission.png)
+
+!!! warning "Exercise Caution"
+    The ability to create tokens on behalf of other users enables the requestor to access the created token. This ability is intended e.g. for the provisioning of tokens by automated services, and should be used with extreme caution to avoid a security compromise.
 
 ### Authenticating to the API
 
@@ -633,7 +638,7 @@ $ curl -X POST \
 https://netbox/api/users/tokens/provision/ \
 --data '{
     "username": "hankhill",
-    "password": "I<3C3H8",
+    "password": "I<3C3H8"
 }'
 ```
 
@@ -657,3 +662,28 @@ Note that we are _not_ passing an existing REST API token with this request. If 
     "description": ""
 }
 ```
+
+## HTTP Headers
+
+### `API-Version`
+
+This header specifies the API version in use. This will always match the version of NetBox installed. For example, NetBox v3.4.2 will report an API version of `3.4`.
+
+### `X-Request-ID`
+
+!!! info "This feature was introduced in NetBox v3.5."
+
+This header specifies the unique ID assigned to the received API request. It can be very handy for correlating a request with change records. For example, after creating several new objects, you can filter against the object changes API endpoint to retrieve the resulting change records:
+
+```
+GET /api/extras/object-changes/?request_id=e39c84bc-f169-4d5f-bc1c-94487a1b18b5
+```
+
+The request ID can also be used to filter many objects directly, to return those created or updated by a certain request:
+
+```
+GET /api/dcim/sites/?created_by_request=e39c84bc-f169-4d5f-bc1c-94487a1b18b5
+```
+
+!!! note
+    This header is included with _all_ NetBox responses, although it is most practical when working with an API.
