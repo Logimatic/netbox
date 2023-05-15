@@ -1,22 +1,18 @@
 import datetime
-from unittest import skipIf
 
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.utils.timezone import make_aware
-from django_rq.queues import get_connection
 from rest_framework import status
-from rq import Worker
 
+from core.choices import ManagedFileRootPathChoices
 from dcim.models import Device, DeviceRole, DeviceType, Manufacturer, Rack, Location, RackRole, Site
 from extras.api.views import ReportViewSet, ScriptViewSet
 from extras.models import *
 from extras.reports import Report
 from extras.scripts import BooleanVar, IntegerVar, Script, StringVar
 from utilities.testing import APITestCase, APIViewTestCases
-
-rq_worker_running = Worker.count(get_connection('default'))
 
 
 class AppTest(APITestCase):
@@ -105,6 +101,11 @@ class CustomFieldTest(APIViewTestCases.APIViewTestCase):
         },
     ]
     bulk_update_data = {
+        'description': 'New description',
+    }
+    update_data = {
+        'content_types': ['dcim.device'],
+        'name': 'New_Name',
         'description': 'New description',
     }
 
@@ -517,6 +518,46 @@ class ConfigContextTest(APIViewTestCases.APIViewTestCase):
         self.assertEqual(rendered_context['bar'], 456)
 
 
+class ConfigTemplateTest(APIViewTestCases.APIViewTestCase):
+    model = ConfigTemplate
+    brief_fields = ['display', 'id', 'name', 'url']
+    create_data = [
+        {
+            'name': 'Config Template 4',
+            'template_code': 'Foo: {{ foo }}',
+        },
+        {
+            'name': 'Config Template 5',
+            'template_code': 'Bar: {{ bar }}',
+        },
+        {
+            'name': 'Config Template 6',
+            'template_code': 'Baz: {{ baz }}',
+        },
+    ]
+    bulk_update_data = {
+        'description': 'New description',
+    }
+
+    @classmethod
+    def setUpTestData(cls):
+        config_templates = (
+            ConfigTemplate(
+                name='Config Template 1',
+                template_code='Foo: {{ foo }}'
+            ),
+            ConfigTemplate(
+                name='Config Template 2',
+                template_code='Bar: {{ bar }}'
+            ),
+            ConfigTemplate(
+                name='Config Template 3',
+                template_code='Baz: {{ baz }}'
+            ),
+        )
+        ConfigTemplate.objects.bulk_create(config_templates)
+
+
 class ReportTest(APITestCase):
 
     class TestReport(Report):
@@ -524,30 +565,27 @@ class ReportTest(APITestCase):
         def test_foo(self):
             self.log_success(None, "Report completed")
 
+    @classmethod
+    def setUpTestData(cls):
+        ReportModule.objects.create(
+            file_root=ManagedFileRootPathChoices.REPORTS,
+            file_path='/var/tmp/report.py'
+        )
+
     def get_test_report(self, *args):
-        return self.TestReport()
+        return ReportModule.objects.first(), self.TestReport()
 
     def setUp(self):
         super().setUp()
 
-        # Monkey-patch the API viewset's _get_script method to return our test script above
-        ReportViewSet._retrieve_report = self.get_test_report
+        # Monkey-patch the API viewset's _get_report() method to return our test Report above
+        ReportViewSet._get_report = self.get_test_report
 
     def test_get_report(self):
         url = reverse('extras-api:report-detail', kwargs={'pk': None})
         response = self.client.get(url, **self.header)
 
         self.assertEqual(response.data['name'], self.TestReport.__name__)
-
-    @skipIf(not rq_worker_running, "RQ worker not running")
-    def test_run_report(self):
-        self.add_permissions('extras.run_script')
-
-        url = reverse('extras-api:report-run', kwargs={'pk': None})
-        response = self.client.post(url, {}, format='json', **self.header)
-        self.assertHttpStatus(response, status.HTTP_200_OK)
-
-        self.assertEqual(response.data['result']['status']['value'], 'pending')
 
 
 class ScriptTest(APITestCase):
@@ -569,14 +607,20 @@ class ScriptTest(APITestCase):
 
             return 'Script complete'
 
+    @classmethod
+    def setUpTestData(cls):
+        ScriptModule.objects.create(
+            file_root=ManagedFileRootPathChoices.SCRIPTS,
+            file_path='/var/tmp/script.py'
+        )
+
     def get_test_script(self, *args):
-        return self.TestScript
+        return ScriptModule.objects.first(), self.TestScript
 
     def setUp(self):
-
         super().setUp()
 
-        # Monkey-patch the API viewset's _get_script method to return our test script above
+        # Monkey-patch the API viewset's _get_script() method to return our test Script above
         ScriptViewSet._get_script = self.get_test_script
 
     def test_get_script(self):
@@ -588,27 +632,6 @@ class ScriptTest(APITestCase):
         self.assertEqual(response.data['vars']['var1'], 'StringVar')
         self.assertEqual(response.data['vars']['var2'], 'IntegerVar')
         self.assertEqual(response.data['vars']['var3'], 'BooleanVar')
-
-    @skipIf(not rq_worker_running, "RQ worker not running")
-    def test_run_script(self):
-        self.add_permissions('extras.run_script')
-
-        script_data = {
-            'var1': 'FooBar',
-            'var2': 123,
-            'var3': False,
-        }
-
-        data = {
-            'data': script_data,
-            'commit': True,
-        }
-
-        url = reverse('extras-api:script-detail', kwargs={'pk': None})
-        response = self.client.post(url, data, format='json', **self.header)
-        self.assertHttpStatus(response, status.HTTP_200_OK)
-
-        self.assertEqual(response.data['result']['status']['value'], 'pending')
 
 
 class CreatedUpdatedFilterTest(APITestCase):

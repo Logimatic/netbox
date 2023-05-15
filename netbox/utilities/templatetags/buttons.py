@@ -5,6 +5,18 @@ from django.urls import NoReverseMatch, reverse
 from extras.models import ExportTemplate
 from utilities.utils import get_viewname, prepare_cloned_fields
 
+__all__ = (
+    'add_button',
+    'bulk_delete_button',
+    'bulk_edit_button',
+    'clone_button',
+    'delete_button',
+    'edit_button',
+    'export_button',
+    'import_button',
+    'sync_button',
+)
+
 register = template.Library()
 
 
@@ -20,6 +32,8 @@ def clone_button(instance):
     param_string = prepare_cloned_fields(instance).urlencode()
     if param_string:
         url = f'{url}?{param_string}'
+    else:
+        url = None
 
     return {
         'url': url,
@@ -39,6 +53,16 @@ def edit_button(instance):
 @register.inclusion_tag('buttons/delete.html')
 def delete_button(instance):
     viewname = get_viewname(instance, 'delete')
+    url = reverse(viewname, kwargs={'pk': instance.pk})
+
+    return {
+        'url': url,
+    }
+
+
+@register.inclusion_tag('buttons/sync.html')
+def sync_button(instance):
+    viewname = get_viewname(instance, 'sync')
     url = reverse(viewname, kwargs={'pk': instance.pk})
 
     return {

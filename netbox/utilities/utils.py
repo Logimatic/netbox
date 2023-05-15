@@ -48,6 +48,10 @@ def get_viewname(model, action=None, rest_api=False):
         if is_plugin:
             viewname = f'plugins-api:{app_label}-api:{model_name}'
         else:
+            # Alter the app_label for group and user model_name to point to users app
+            if app_label == 'auth' and model_name in ['group', 'user']:
+                app_label = 'users'
+
             viewname = f'{app_label}-api:{model_name}'
         # Append the action, if any
         if action:
@@ -359,18 +363,18 @@ def prepare_cloned_fields(instance):
     return QueryDict(urlencode(params), mutable=True)
 
 
-def shallow_compare_dict(source_dict, destination_dict, exclude=None):
+def shallow_compare_dict(source_dict, destination_dict, exclude=tuple()):
     """
     Return a new dictionary of the different keys. The values of `destination_dict` are returned. Only the equality of
     the first layer of keys/values is checked. `exclude` is a list or tuple of keys to be ignored.
     """
     difference = {}
 
-    for key in destination_dict:
-        if source_dict.get(key) != destination_dict[key]:
-            if isinstance(exclude, (list, tuple)) and key in exclude:
-                continue
-            difference[key] = destination_dict[key]
+    for key, value in destination_dict.items():
+        if key in exclude:
+            continue
+        if source_dict.get(key) != value:
+            difference[key] = value
 
     return difference
 
@@ -487,14 +491,14 @@ def clean_html(html, schemes):
     Also takes a list of allowed URI schemes.
     """
 
-    ALLOWED_TAGS = [
+    ALLOWED_TAGS = {
         "div", "pre", "code", "blockquote", "del",
         "hr", "h1", "h2", "h3", "h4", "h5", "h6",
         "ul", "ol", "li", "p", "br",
         "strong", "em", "a", "b", "i", "img",
         "table", "thead", "tbody", "tr", "th", "td",
         "dl", "dt", "dd",
-    ]
+    }
 
     ALLOWED_ATTRIBUTES = {
         "div": ['class'],

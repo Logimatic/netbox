@@ -27,15 +27,15 @@ class CommentField(forms.CharField):
     """
     A textarea with support for Markdown rendering. Exists mostly just to add a standard `help_text`.
     """
-    widget = forms.Textarea
+    widget = widgets.MarkdownWidget
     help_text = f"""
         <i class="mdi mdi-information-outline"></i>
         <a href="{static('docs/reference/markdown/')}" target="_blank" tabindex="-1">
         Markdown</a> syntax is supported
     """
 
-    def __init__(self, *, label='', help_text=help_text, required=False, **kwargs):
-        super().__init__(label=label, help_text=help_text, required=required, **kwargs)
+    def __init__(self, *, help_text=help_text, required=False, **kwargs):
+        super().__init__(help_text=help_text, required=required, **kwargs)
 
 
 class SlugField(forms.SlugField):
@@ -68,7 +68,6 @@ class TagFilterField(forms.MultipleChoiceField):
 
     :param model: The model of the filter
     """
-    widget = widgets.StaticSelectMultiple
 
     def __init__(self, model, *args, **kwargs):
         def get_choices():
@@ -137,13 +136,16 @@ class MACAddressField(forms.Field):
 
 class ChoiceField(forms.ChoiceField):
     """
-    Overrides Django's built-in `ChoiceField` to use NetBox's `StaticSelect` widget
+    Previously used to override Django's built-in `ChoiceField` to use NetBox's now-obsolete `StaticSelect` widget.
     """
-    widget = widgets.StaticSelect
+    # TODO: Remove in v3.6
+    pass
 
 
 class MultipleChoiceField(forms.MultipleChoiceField):
     """
-    Overrides Django's built-in `MultipleChoiceField` to use NetBox's `StaticSelectMultiple` widget
+    Previously used to override Django's built-in `MultipleChoiceField` to use NetBox's now-obsolete
+    `StaticSelectMultiple` widget.
     """
-    widget = widgets.StaticSelectMultiple
+    # TODO: Remove in v3.6
+    pass

@@ -28,12 +28,12 @@ This section entails the installation and configuration of a local PostgreSQL da
     host    all             all             ::1/128                 md5
     ```
 
-Once PostgreSQL has been installed, start the service and enable it to run at boot:
+    Once PostgreSQL has been installed, start the service and enable it to run at boot:
 
-```no-highlight
-sudo systemctl start postgresql
-sudo systemctl enable postgresql
-```
+    ```no-highlight
+    sudo systemctl start postgresql
+    sudo systemctl enable postgresql
+    ```
 
 Before continuing, verify that you have installed PostgreSQL 11 or later:
 
@@ -54,7 +54,7 @@ Within the shell, enter the following commands to create the database and user (
 ```postgresql
 CREATE DATABASE netbox;
 CREATE USER netbox WITH PASSWORD 'J5brHrAXFLQSif0K';
-GRANT ALL PRIVILEGES ON DATABASE netbox TO netbox;
+ALTER DATABASE netbox OWNER TO netbox;
 ```
 
 !!! danger "Use a strong password"

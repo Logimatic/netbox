@@ -16,10 +16,10 @@ from virtualization.models import VirtualMachine, VMInterface
 from .choices import *
 from .models import *
 
-
 __all__ = (
     'AggregateFilterSet',
     'ASNFilterSet',
+    'ASNRangeFilterSet',
     'FHRPGroupAssignmentFilterSet',
     'FHRPGroupFilterSet',
     'IPAddressFilterSet',
@@ -165,6 +165,29 @@ class AggregateFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
             return queryset.filter(prefix=query)
         except (AddrFormatError, ValueError):
             return queryset.none()
+
+
+class ASNRangeFilterSet(OrganizationalModelFilterSet, TenancyFilterSet):
+    rir_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=RIR.objects.all(),
+        label=_('RIR (ID)'),
+    )
+    rir = django_filters.ModelMultipleChoiceFilter(
+        field_name='rir__slug',
+        queryset=RIR.objects.all(),
+        to_field_name='slug',
+        label=_('RIR (slug)'),
+    )
+
+    class Meta:
+        model = ASNRange
+        fields = ['id', 'name', 'start', 'end', 'description']
+
+    def search(self, queryset, name, value):
+        if not value.strip():
+            return queryset
+        qs_filter = Q(description__icontains=value)
+        return queryset.filter(qs_filter)
 
 
 class ASNFilterSet(OrganizationalModelFilterSet, TenancyFilterSet):
@@ -444,7 +467,7 @@ class IPRangeFilterSet(TenancyFilterSet, NetBoxModelFilterSet):
 
     class Meta:
         model = IPRange
-        fields = ['id', 'description']
+        fields = ['id', 'mark_utilized', 'description']
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -599,7 +622,33 @@ class IPAddressFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
                 return queryset.none()
         return queryset.filter(q)
 
+    def parse_inet_addresses(self, value):
+        '''
+        Parse networks or IP addresses and cast to a format
+        acceptable by the Postgres inet type.
+
+        Skips invalid values.
+        '''
+        parsed = []
+        for addr in value:
+            if netaddr.valid_ipv4(addr) or netaddr.valid_ipv6(addr):
+                parsed.append(addr)
+                continue
+            try:
+                network = netaddr.IPNetwork(addr)
+                parsed.append(str(network))
+            except (AddrFormatError, ValueError):
+                continue
+        return parsed
+
     def filter_address(self, queryset, name, value):
+        # Let's first parse the addresses passed
+        # as argument. If they are all invalid,
+        # we return an empty queryset
+        value = self.parse_inet_addresses(value)
+        if (len(value) == 0):
+            return queryset.none()
+
         try:
             return queryset.filter(address__net_in=value)
         except ValidationError:

@@ -13,9 +13,9 @@ NetBox provides the ideal "source of truth" to power network automation.
 Available as open source software under the Apache 2.0 license, NetBox serves
 as the cornerstone for network automation in thousands of organizations.
 
-* **Physical infrasucture:** Accurately model the physical world, from global regions down to individual racks of gear. Then connect everything - network, console, and power!
+* **Physical infrastructure:** Accurately model the physical world, from global regions down to individual racks of gear. Then connect everything - network, console, and power!
 * **Modern IPAM:** All the standard IPAM functionality you expect, plus VRF import/export tracking, VLAN management, and overlay support.
-* **Data circuits:** Confidently manage the delivery of crtical circuits from various service providers, modeled seamlessly alongside your own infrastructure.
+* **Data circuits:** Confidently manage the delivery of critical circuits from various service providers, modeled seamlessly alongside your own infrastructure.
 * **Power tracking:** Map the distribution of power from upstream sources to individual feeds and outlets.
 * **Organization:** Manage tenant and contact assignments natively.
 * **Powerful search:** Easily find anything you need using a single global search function.
@@ -29,9 +29,18 @@ as the cornerstone for network automation in thousands of organizations.
 
 ## Getting Started
 
+<div align="center">
+
+  [![NetBox logo](https://raw.githubusercontent.com/wiki/netbox-community/netbox/images/deploy/deploy1.png)](https://github.com/netbox-community/netbox)
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  [![Docker logo](https://raw.githubusercontent.com/wiki/netbox-community/netbox/images/deploy/deploy2.png)](https://github.com/netbox-community/netbox-docker)
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  [![NetBox Labs logo](https://raw.githubusercontent.com/wiki/netbox-community/netbox/images/deploy/deploy3.png)](https://netboxlabs.com/netbox-cloud/)
+
+</div>
+
 * Just want to explore? Check out [our public demo](https://demo.netbox.dev/) right now!
 * The [official documentation](https://docs.netbox.dev) offers a comprehensive introduction.
-* Choose your deployment: [self-hosted](https://github.com/netbox-community/netbox), [Docker](https://github.com/netbox-community/netbox-docker), or [NetBox Cloud](https://netboxlabs.com/netbox-cloud/).
 * Check out [our wiki](https://github.com/netbox-community/netbox/wiki/Community-Contributions) for even more projects to get the most out of NetBox!
 
 ## Get Involved
@@ -58,8 +67,6 @@ as the cornerstone for network automation in thousands of organizations.
   [![NetBox Labs](https://raw.githubusercontent.com/wiki/netbox-community/netbox/images/sponsors/netbox_labs.png)](https://netboxlabs.com)
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   [![DigitalOcean](https://raw.githubusercontent.com/wiki/netbox-community/netbox/images/sponsors/digitalocean.png)](https://try.digitalocean.com/developer-cloud)
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  [![NS1](https://raw.githubusercontent.com/wiki/netbox-community/netbox/images/sponsors/ns1.png)](https://ns1.com)
   <br />
   [![Sentry](https://raw.githubusercontent.com/wiki/netbox-community/netbox/images/sponsors/sentry.png)](https://sentry.io)
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
