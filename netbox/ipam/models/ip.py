@@ -406,7 +406,7 @@ class Prefix(GetAvailablePrefixesMixin, PrimaryModel):
         Return all available IPs within this prefix as an IPSet.
         """
         if self.mark_utilized:
-            return list()
+            return netaddr.IPSet()
 
         prefix = netaddr.IPSet(self.prefix)
         child_ips = netaddr.IPSet([ip.address.ip for ip in self.get_child_ips()])
@@ -782,6 +782,14 @@ class IPAddress(PrimaryModel):
                 ])
                 if available_ips:
                     return next(iter(available_ips))
+
+    def get_related_ips(self):
+        """
+        Return all IPAddresses belonging to the same VRF.
+        """
+        return IPAddress.objects.exclude(address=str(self.address)).filter(
+            vrf=self.vrf, address__net_contained_or_equal=str(self.address)
+        )
 
     def clean(self):
         super().clean()

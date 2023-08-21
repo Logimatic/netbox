@@ -1042,6 +1042,9 @@ class InterfaceForm(InterfaceCommonForm, ModularDeviceComponentForm):
         queryset=VirtualDeviceContext.objects.all(),
         required=False,
         label='Virtual Device Contexts',
+        initial_params={
+            'interfaces': '$parent',
+        },
         query_params={
             'device_id': '$device',
         }
@@ -1214,7 +1217,7 @@ class PopulateDeviceBayForm(BootstrapMixin, forms.Form):
     installed_device = forms.ModelChoiceField(
         queryset=Device.objects.all(),
         label=_('Child Device'),
-        help_text=_("Child devices must first be created and assigned to the site/rack of the parent device.")
+        help_text=_("Child devices must first be created and assigned to the site and rack of the parent device.")
     )
 
     def __init__(self, device_bay, *args, **kwargs):

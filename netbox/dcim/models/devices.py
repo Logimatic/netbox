@@ -184,6 +184,8 @@ class DeviceType(PrimaryModel, WeightMixin):
             'subdevice_role': self.subdevice_role,
             'airflow': self.airflow,
             'comments': self.comments,
+            'weight': float(self.weight) if self.weight is not None else None,
+            'weight_unit': self.weight_unit,
         }
 
         # Component templates
@@ -230,7 +232,7 @@ class DeviceType(PrimaryModel, WeightMixin):
         super().clean()
 
         # U height must be divisible by 0.5
-        if self.u_height % decimal.Decimal(0.5):
+        if decimal.Decimal(self.u_height) % decimal.Decimal(0.5):
             raise ValidationError({
                 'u_height': "U height must be in increments of 0.5 rack units."
             })
@@ -361,6 +363,8 @@ class ModuleType(PrimaryModel, WeightMixin):
             'model': self.model,
             'part_number': self.part_number,
             'comments': self.comments,
+            'weight': float(self.weight) if self.weight is not None else None,
+            'weight_unit': self.weight_unit,
         }
 
         # Component templates
@@ -564,7 +568,7 @@ class Device(PrimaryModel, ConfigContextModel):
         decimal_places=1,
         blank=True,
         null=True,
-        validators=[MinValueValidator(1), MaxValueValidator(99.5)],
+        validators=[MinValueValidator(1), MaxValueValidator(RACK_U_HEIGHT_MAX + 0.5)],
         verbose_name='Position (U)',
         help_text=_('The lowest-numbered unit occupied by the device')
     )
