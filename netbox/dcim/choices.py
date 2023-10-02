@@ -1404,7 +1404,7 @@ class CableTypeChoices(ChoiceSet):
 
     CHOICES = (
         (
-            'LMCE', (
+            _('LMCE'), (
                 (TYPE_CAT6A_SFTP_LSZH, 'CAT6a S/FTP LSZH'),
                 (TYPE_CAT7_SFTP_LSZH, 'CAT7 S/FTP LSZH'),
 
@@ -1428,7 +1428,6 @@ class CableTypeChoices(ChoiceSet):
             ),
         ),
         (
-            'Copper', (
             _('Copper'), (
                 (TYPE_CAT3, 'CAT3'),
                 (TYPE_CAT5, 'CAT5'),
@@ -1460,7 +1459,6 @@ class CableTypeChoices(ChoiceSet):
         ),
         (TYPE_POWER, _('Power')),
     )
-
 
 class LinkStatusChoices(ChoiceSet):
 
