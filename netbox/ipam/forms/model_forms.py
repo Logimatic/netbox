@@ -215,6 +215,9 @@ class PrefixForm(TenancyForm, NetBoxModelForm):
         queryset=VLAN.objects.all(),
         required=False,
         selector=True,
+        query_params={
+            'site_id': '$site',
+        },
         label=_('VLAN'),
     )
     role = DynamicModelChoiceField(
@@ -351,7 +354,7 @@ class IPAddressForm(TenancyForm, NetBoxModelForm):
             })
         elif selected_objects:
             assigned_object = self.cleaned_data[selected_objects[0]]
-            if self.instance.pk and self.cleaned_data['primary_for_parent'] and assigned_object != self.instance.assigned_object:
+            if self.instance.pk and self.instance.assigned_object and self.cleaned_data['primary_for_parent'] and assigned_object != self.instance.assigned_object:
                 raise ValidationError(
                     _("Cannot reassign IP address while it is designated as the primary IP for the parent object")
                 )
@@ -728,7 +731,7 @@ class ServiceCreateForm(ServiceForm):
     class Meta(ServiceForm.Meta):
         fields = [
             'device', 'virtual_machine', 'service_template', 'name', 'protocol', 'ports', 'ipaddresses', 'description',
-            'tags',
+            'comments', 'tags',
         ]
 
     def __init__(self, *args, **kwargs):

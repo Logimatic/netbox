@@ -1,10 +1,91 @@
 # NetBox v3.6
 
+## v3.6.3 (2023-09-26)
+
+### Enhancements
+
+* [#12732](https://github.com/netbox-community/netbox/issues/12732) - Add toggle to hide disconnected interfaces under device view
+
+### Bug Fixes
+
+* [#11079](https://github.com/netbox-community/netbox/issues/11079) - Enable tracing cable paths across multiple cables in parallel
+* [#11901](https://github.com/netbox-community/netbox/issues/11901) - Fix `IndexError` exception when manipulating terminations for existing cables via REST API
+* [#13506](https://github.com/netbox-community/netbox/issues/13506) - Enable creating a config template which references a data file via the REST API
+* [#13666](https://github.com/netbox-community/netbox/issues/13666) - Cleanly handle reports without any test methods defined
+* [#13839](https://github.com/netbox-community/netbox/issues/13839) - Restore original text color for HTML code elements
+* [#13843](https://github.com/netbox-community/netbox/issues/13843) - Fix assignment of VLAN group scope during bulk edit
+* [#13845](https://github.com/netbox-community/netbox/issues/13845) - Fix `AttributeError` exception when attaching front/rear images to a device type
+* [#13849](https://github.com/netbox-community/netbox/issues/13849) - Fix `KeyError` exception when deleting an object which references a configured choice value that has been removed
+* [#13859](https://github.com/netbox-community/netbox/issues/13859) - Fix invalid response when searching for custom choice field values returns no matches
+* [#13864](https://github.com/netbox-community/netbox/issues/13864) - Correct default background color for dashboard widget headers
+* [#13871](https://github.com/netbox-community/netbox/issues/13871) - Fix rack filtering for empty location during device bulk import
+* [#13891](https://github.com/netbox-community/netbox/issues/13891) - Allow designating an IP address as primary for device/VM while assigning it to an interface
+
+---
+
+## v3.6.2 (2023-09-20)
+
+### Enhancements
+
+* [#13245](https://github.com/netbox-community/netbox/issues/13245) - Add interface types for QSFP112 and OSFP-RHS
+* [#13563](https://github.com/netbox-community/netbox/issues/13563) - Add support for other delimiting characters when using CSV import
+
+### Bug Fixes
+
+* [#11209](https://github.com/netbox-community/netbox/issues/11209) - Hide available IP/VLAN listing when sorting under a parent prefix or VLAN range
+* [#11617](https://github.com/netbox-community/netbox/issues/11617) - Raise validation error on the presence of an unknown CSV header during bulk import
+* [#12219](https://github.com/netbox-community/netbox/issues/12219) - Fix dashboard widget heading contrast under dark mode
+* [#12685](https://github.com/netbox-community/netbox/issues/12685) - Render Markdown in custom field help text on object edit forms
+* [#13653](https://github.com/netbox-community/netbox/issues/13653) - Tweak color of error text to improve legibility
+* [#13701](https://github.com/netbox-community/netbox/issues/13701) - Correct display of power feed legs under device view
+* [#13706](https://github.com/netbox-community/netbox/issues/13706) - Restore extra filters dropdown on device interfaces list
+* [#13721](https://github.com/netbox-community/netbox/issues/13721) - Filter VLAN choices by selected site (if any) when creating a prefix
+* [#13727](https://github.com/netbox-community/netbox/issues/13727) - Fix exception when viewing rendered config for VM without a role assigned
+* [#13745](https://github.com/netbox-community/netbox/issues/13745) - Optimize counter field migrations for large databases
+* [#13756](https://github.com/netbox-community/netbox/issues/13756) - Fix exception when sorting module bay list by installed module status
+* [#13757](https://github.com/netbox-community/netbox/issues/13757) - Fix RecursionError exception when assigning config context to a device type
+* [#13767](https://github.com/netbox-community/netbox/issues/13767) - Fix support for comments when creating a new service via web UI
+* [#13782](https://github.com/netbox-community/netbox/issues/13782) - Fix tag exclusion support for contact assignments
+* [#13791](https://github.com/netbox-community/netbox/issues/13791) - Preserve whitespace in values when performing bulk rename of objects via web UI
+* [#13809](https://github.com/netbox-community/netbox/issues/13809) - Avoid TypeError exception when editing active configuration with statically defined `CUSTOM_VALIDATORS`
+* [#13813](https://github.com/netbox-community/netbox/issues/13813) - Fix member count for newly created virtual chassis
+* [#13818](https://github.com/netbox-community/netbox/issues/13818) - Restore missing tags field on L2VPN termination edit form
+
+---
+
+## v3.6.1 (2023-09-06)
+
+### Enhancements
+
+* [#12870](https://github.com/netbox-community/netbox/issues/12870) - Support setting token expiration time using the provisioning API endpoint
+* [#13444](https://github.com/netbox-community/netbox/issues/13444) - Add bulk rename functionality to the global device component lists
+* [#13638](https://github.com/netbox-community/netbox/issues/13638) - Add optional `staff_only` attribute to MenuItem
+
+### Bug Fixes
+
+* [#12553](https://github.com/netbox-community/netbox/issues/12552) - Ensure `family` attribute is always returned when creating aggregates and prefixes via REST API
+* [#13619](https://github.com/netbox-community/netbox/issues/13619) - Fix exception when viewing IP address assigned to a virtual machine
+* [#13596](https://github.com/netbox-community/netbox/issues/13596) - Always display "render config" tab for devices and virtual machines
+* [#13620](https://github.com/netbox-community/netbox/issues/13620) - Show admin menu items only for staff users
+* [#13622](https://github.com/netbox-community/netbox/issues/13622) - Fix exception when viewing current config and no revisions have been created
+* [#13626](https://github.com/netbox-community/netbox/issues/13626) - Correct filtering of recent activity list under user view
+* [#13628](https://github.com/netbox-community/netbox/issues/13628) - Remove stale references to obsolete NAPALM integration
+* [#13630](https://github.com/netbox-community/netbox/issues/13630) - Fix display of active status under user view
+* [#13632](https://github.com/netbox-community/netbox/issues/13632) - Avoid raising exception when checking if FHRP group IP address is primary
+* [#13642](https://github.com/netbox-community/netbox/issues/13642) - Suppress warning about unreflected model changes when applying migrations
+* [#13657](https://github.com/netbox-community/netbox/issues/13657) - Fix decoding of data file content
+* [#13674](https://github.com/netbox-community/netbox/issues/13674) - Fix retrieving individual report via REST API
+* [#13682](https://github.com/netbox-community/netbox/issues/13682) - Fix error message returned when validation of custom field default value fails
+* [#13684](https://github.com/netbox-community/netbox/issues/13684) - Enable modifying the configuration when maintenance mode is enabled
+
+---
+
 ## v3.6.0 (2023-08-30)
 
 ### Breaking Changes
 
 * PostgreSQL 11 is no longer supported (dropped in Django 4.2). NetBox v3.6 requires PostgreSQL 12 or later.
+* The `boto3` and `dulwich` packages are no longer installed automatically. If needed for S3/git remote data backend support, add them to `local_requirements.txt` to ensure their installation.
 * The `device_role` field on the Device model has been renamed to `role`. The `device_role` field has been temporarily retained on the REST API serializer for devices for backward compatibility, but is read-only.
 * The `choices` array field has been removed from the CustomField model. Any defined choices are automatically migrated to CustomFieldChoiceSets, accessible via the new `choice_set` field on the CustomField model.
 * The `napalm_driver` and `napalm_args` fields (which were deprecated in v3.5) have been removed from the Platform model.
@@ -85,8 +166,9 @@ Tags may now be restricted to use with designated object types. Tags that have n
 * [#11766](https://github.com/netbox-community/netbox/issues/11766) - Remove obsolete custom `ChoiceField` and `MultipleChoiceField` classes
 * [#12180](https://github.com/netbox-community/netbox/issues/12180) - All API endpoints for available objects (e.g. IP addresses) now inherit from a common parent view
 * [#12237](https://github.com/netbox-community/netbox/issues/12237) - Upgrade Django to v4.2
-* [#12794](https://github.com/netbox-community/netbox/issues/12794) - Avoid direct imports of Django's stock user model
 * [#12320](https://github.com/netbox-community/netbox/issues/12320) - Remove obsolete fields `napalm_driver` and `napalm_args` from Platform
+* [#12794](https://github.com/netbox-community/netbox/issues/12794) - Avoid direct imports of Django's stock user model
+* [#12906](https://github.com/netbox-community/netbox/issues/12906) - The `boto3` (AWS) and `dulwich` (git) packages for remote data sources are now optional requirements
 * [#12964](https://github.com/netbox-community/netbox/issues/12964) - Drop support for PostgreSQL 11
 * [#13309](https://github.com/netbox-community/netbox/issues/13309) - User account-specific resources have been moved to a new `account` app for better organization
 
