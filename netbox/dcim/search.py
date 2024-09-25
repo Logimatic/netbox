@@ -132,10 +132,11 @@ class LocationIndex(SearchIndex):
     model = models.Location
     fields = (
         ('name', 100),
+        ('facility', 100),
         ('slug', 110),
         ('description', 500),
     )
-    display_attrs = ('site', 'status', 'tenant', 'description')
+    display_attrs = ('site', 'status', 'tenant', 'facility', 'description')
 
 
 @register_search
@@ -239,6 +240,17 @@ class PowerPortIndex(SearchIndex):
         ('allocated_draw', 2000),
     )
     display_attrs = ('device', 'label', 'type', 'description')
+
+
+@register_search
+class RackTypeIndex(SearchIndex):
+    model = models.RackType
+    fields = (
+        ('model', 100),
+        ('description', 500),
+        ('comments', 5000),
+    )
+    display_attrs = ('type', 'description')
 
 
 @register_search

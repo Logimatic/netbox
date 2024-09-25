@@ -1,3 +1,5 @@
+import decimal
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -13,7 +15,7 @@ from extras.models import ConfigContextModel
 from extras.querysets import ConfigContextModelQuerySet
 from netbox.config import get_config
 from netbox.models import NetBoxModel, PrimaryModel
-from netbox.models.features import ContactsMixin
+from netbox.models.features import ContactsMixin, ImageAttachmentsMixin
 from utilities.fields import CounterCacheField, NaturalOrderingField
 from utilities.ordering import naturalize_interface
 from utilities.query_functions import CollateAsChar
@@ -27,7 +29,7 @@ __all__ = (
 )
 
 
-class VirtualMachine(ContactsMixin, RenderConfigMixin, ConfigContextModel, PrimaryModel):
+class VirtualMachine(ContactsMixin, ImageAttachmentsMixin, RenderConfigMixin, ConfigContextModel, PrimaryModel):
     """
     A virtual machine which runs inside a Cluster.
     """
@@ -112,7 +114,7 @@ class VirtualMachine(ContactsMixin, RenderConfigMixin, ConfigContextModel, Prima
         null=True,
         verbose_name=_('vCPUs'),
         validators=(
-            MinValueValidator(0.01),
+            MinValueValidator(decimal.Decimal(0.01)),
         )
     )
     memory = models.PositiveIntegerField(
@@ -123,7 +125,12 @@ class VirtualMachine(ContactsMixin, RenderConfigMixin, ConfigContextModel, Prima
     disk = models.PositiveIntegerField(
         blank=True,
         null=True,
-        verbose_name=_('disk (GB)')
+        verbose_name=_('disk (MB)')
+    )
+    serial = models.CharField(
+        verbose_name=_('serial number'),
+        blank=True,
+        max_length=50
     )
 
     # Counter fields
@@ -177,8 +184,8 @@ class VirtualMachine(ContactsMixin, RenderConfigMixin, ConfigContextModel, Prima
                 'cluster': _('A virtual machine must be assigned to a site and/or cluster.')
             })
 
-        # Validate site for cluster & device
-        if self.cluster and self.site and self.cluster.site != self.site:
+        # Validate site for cluster & VM
+        if self.cluster and self.site and self.cluster.site and self.cluster.site != self.site:
             raise ValidationError({
                 'cluster': _(
                     'The selected cluster ({cluster}) is not assigned to this site ({site}).'
@@ -424,7 +431,7 @@ class VMInterface(ComponentModel, BaseInterface, TrackingModelMixin):
 
 class VirtualDisk(ComponentModel, TrackingModelMixin):
     size = models.PositiveIntegerField(
-        verbose_name=_('size (GB)'),
+        verbose_name=_('size (MB)'),
     )
 
     class Meta(ComponentModel.Meta):

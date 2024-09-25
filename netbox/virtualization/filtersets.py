@@ -27,14 +27,14 @@ class ClusterTypeFilterSet(OrganizationalModelFilterSet):
 
     class Meta:
         model = ClusterType
-        fields = ['id', 'name', 'slug', 'description']
+        fields = ('id', 'name', 'slug', 'description')
 
 
 class ClusterGroupFilterSet(OrganizationalModelFilterSet, ContactModelFilterSet):
 
     class Meta:
         model = ClusterGroup
-        fields = ['id', 'name', 'slug', 'description']
+        fields = ('id', 'name', 'slug', 'description')
 
 
 class ClusterFilterSet(NetBoxModelFilterSet, TenancyFilterSet, ContactModelFilterSet):
@@ -101,7 +101,7 @@ class ClusterFilterSet(NetBoxModelFilterSet, TenancyFilterSet, ContactModelFilte
 
     class Meta:
         model = Cluster
-        fields = ['id', 'name', 'description']
+        fields = ('id', 'name', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -240,7 +240,10 @@ class VirtualMachineFilterSet(
 
     class Meta:
         model = VirtualMachine
-        fields = ['id', 'cluster', 'vcpus', 'memory', 'disk', 'description']
+        fields = (
+            'id', 'cluster', 'vcpus', 'memory', 'disk', 'description', 'interface_count', 'virtual_disk_count',
+            'serial'
+        )
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -250,7 +253,8 @@ class VirtualMachineFilterSet(
             Q(description__icontains=value) |
             Q(comments__icontains=value) |
             Q(primary_ip4__address__startswith=value) |
-            Q(primary_ip6__address__startswith=value)
+            Q(primary_ip6__address__startswith=value) |
+            Q(serial__icontains=value)
         )
 
     def _has_primary_ip(self, queryset, name, value):
@@ -299,7 +303,7 @@ class VMInterfaceFilterSet(NetBoxModelFilterSet, CommonInterfaceFilterSet):
 
     class Meta:
         model = VMInterface
-        fields = ['id', 'name', 'enabled', 'mtu', 'description']
+        fields = ('id', 'name', 'enabled', 'mtu', 'mode', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -325,7 +329,7 @@ class VirtualDiskFilterSet(NetBoxModelFilterSet):
 
     class Meta:
         model = VirtualDisk
-        fields = ['id', 'name', 'size', 'description']
+        fields = ('id', 'name', 'size', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():

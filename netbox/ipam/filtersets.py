@@ -8,6 +8,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from netaddr.core import AddrFormatError
 
+from circuits.models import Provider
 from dcim.models import Device, Interface, Region, Site, SiteGroup
 from netbox.filtersets import ChangeLoggedModelFilterSet, OrganizationalModelFilterSet, NetBoxModelFilterSet
 from tenancy.filtersets import TenancyFilterSet
@@ -75,7 +76,7 @@ class VRFFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
 
     class Meta:
         model = VRF
-        fields = ['id', 'name', 'rd', 'enforce_unique', 'description']
+        fields = ('id', 'name', 'rd', 'enforce_unique', 'description')
 
 
 class RouteTargetFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
@@ -101,6 +102,28 @@ class RouteTargetFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
         to_field_name='rd',
         label=_('Export VRF (RD)'),
     )
+    importing_l2vpn_id = django_filters.ModelMultipleChoiceFilter(
+        field_name='importing_l2vpns',
+        queryset=L2VPN.objects.all(),
+        label=_('Importing L2VPN'),
+    )
+    importing_l2vpn = django_filters.ModelMultipleChoiceFilter(
+        field_name='importing_l2vpns__identifier',
+        queryset=L2VPN.objects.all(),
+        to_field_name='identifier',
+        label=_('Importing L2VPN (identifier)'),
+    )
+    exporting_l2vpn_id = django_filters.ModelMultipleChoiceFilter(
+        field_name='exporting_l2vpns',
+        queryset=L2VPN.objects.all(),
+        label=_('Exporting L2VPN'),
+    )
+    exporting_l2vpn = django_filters.ModelMultipleChoiceFilter(
+        field_name='exporting_l2vpns__identifier',
+        queryset=L2VPN.objects.all(),
+        to_field_name='identifier',
+        label=_('Exporting L2VPN (identifier)'),
+    )
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -112,14 +135,14 @@ class RouteTargetFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
 
     class Meta:
         model = RouteTarget
-        fields = ['id', 'name', 'description']
+        fields = ('id', 'name', 'description')
 
 
 class RIRFilterSet(OrganizationalModelFilterSet):
 
     class Meta:
         model = RIR
-        fields = ['id', 'name', 'slug', 'is_private', 'description']
+        fields = ('id', 'name', 'slug', 'is_private', 'description')
 
 
 class AggregateFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
@@ -144,7 +167,7 @@ class AggregateFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
 
     class Meta:
         model = Aggregate
-        fields = ['id', 'date_added', 'description']
+        fields = ('id', 'date_added', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -183,7 +206,7 @@ class ASNRangeFilterSet(OrganizationalModelFilterSet, TenancyFilterSet):
 
     class Meta:
         model = ASNRange
-        fields = ['id', 'name', 'start', 'end', 'description']
+        fields = ('id', 'name', 'slug', 'start', 'end', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -214,10 +237,21 @@ class ASNFilterSet(OrganizationalModelFilterSet, TenancyFilterSet):
         to_field_name='slug',
         label=_('Site (slug)'),
     )
+    provider_id = django_filters.ModelMultipleChoiceFilter(
+        field_name='providers',
+        queryset=Provider.objects.all(),
+        label=_('Provider (ID)'),
+    )
+    provider = django_filters.ModelMultipleChoiceFilter(
+        field_name='providers__slug',
+        queryset=Provider.objects.all(),
+        to_field_name='slug',
+        label=_('Provider (slug)'),
+    )
 
     class Meta:
         model = ASN
-        fields = ['id', 'asn', 'description']
+        fields = ('id', 'asn', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -234,7 +268,7 @@ class RoleFilterSet(OrganizationalModelFilterSet):
 
     class Meta:
         model = Role
-        fields = ['id', 'name', 'slug', 'description']
+        fields = ('id', 'name', 'slug', 'description', 'weight')
 
 
 class PrefixFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
@@ -359,7 +393,7 @@ class PrefixFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
 
     class Meta:
         model = Prefix
-        fields = ['id', 'is_pool', 'mark_utilized', 'description']
+        fields = ('id', 'is_pool', 'mark_utilized', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -424,7 +458,7 @@ class PrefixFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
         return queryset.filter(
             Q(vrf=vrf) |
             Q(vrf__export_targets__in=vrf.import_targets.all())
-        )
+        ).distinct()
 
 
 class IPRangeFilterSet(TenancyFilterSet, NetBoxModelFilterSet):
@@ -475,7 +509,7 @@ class IPRangeFilterSet(TenancyFilterSet, NetBoxModelFilterSet):
 
     class Meta:
         model = IPRange
-        fields = ['id', 'mark_utilized', 'description']
+        fields = ('id', 'mark_utilized', 'size', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -628,10 +662,20 @@ class IPAddressFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
     role = django_filters.MultipleChoiceFilter(
         choices=IPAddressRoleChoices
     )
+    service_id = django_filters.ModelMultipleChoiceFilter(
+        field_name='services',
+        queryset=Service.objects.all(),
+        label=_('Service (ID)'),
+    )
+    nat_inside_id = django_filters.ModelMultipleChoiceFilter(
+        field_name='nat_inside',
+        queryset=IPAddress.objects.all(),
+        label=_('NAT inside IP address (ID)'),
+    )
 
     class Meta:
         model = IPAddress
-        fields = ['id', 'dns_name', 'description']
+        fields = ('id', 'dns_name', 'description', 'assigned_object_type', 'assigned_object_id')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -694,7 +738,7 @@ class IPAddressFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
         return queryset.filter(
             Q(vrf=vrf) |
             Q(vrf__export_targets__in=vrf.import_targets.all())
-        )
+        ).distinct()
 
     def filter_device(self, queryset, name, value):
         devices = Device.objects.filter(**{'{}__in'.format(name): value})
@@ -758,7 +802,7 @@ class FHRPGroupFilterSet(NetBoxModelFilterSet):
 
     class Meta:
         model = FHRPGroup
-        fields = ['id', 'group_id', 'name', 'auth_key', 'description']
+        fields = ('id', 'group_id', 'name', 'auth_key', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -819,7 +863,7 @@ class FHRPGroupAssignmentFilterSet(ChangeLoggedModelFilterSet):
 
     class Meta:
         model = FHRPGroupAssignment
-        fields = ['id', 'group_id', 'interface_type', 'interface_id', 'priority']
+        fields = ('id', 'group_id', 'interface_type', 'interface_id', 'priority')
 
     def filter_device(self, queryset, name, value):
         devices = Device.objects.filter(**{f'{name}__in': value})
@@ -849,7 +893,7 @@ class VLANGroupFilterSet(OrganizationalModelFilterSet):
     region = django_filters.NumberFilter(
         method='filter_scope'
     )
-    sitegroup = django_filters.NumberFilter(
+    site_group = django_filters.NumberFilter(
         method='filter_scope'
     )
     site = django_filters.NumberFilter(
@@ -861,16 +905,19 @@ class VLANGroupFilterSet(OrganizationalModelFilterSet):
     rack = django_filters.NumberFilter(
         method='filter_scope'
     )
-    clustergroup = django_filters.NumberFilter(
+    cluster_group = django_filters.NumberFilter(
         method='filter_scope'
     )
     cluster = django_filters.NumberFilter(
         method='filter_scope'
     )
+    contains_vid = django_filters.NumberFilter(
+        method='filter_contains_vid'
+    )
 
     class Meta:
         model = VLANGroup
-        fields = ['id', 'name', 'slug', 'min_vid', 'max_vid', 'description', 'scope_id']
+        fields = ('id', 'name', 'slug', 'description', 'scope_id')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -882,9 +929,25 @@ class VLANGroupFilterSet(OrganizationalModelFilterSet):
         return queryset.filter(qs_filter)
 
     def filter_scope(self, queryset, name, value):
+        model_name = name.replace('_', '')
         return queryset.filter(
-            scope_type=ContentType.objects.get(model=name),
+            scope_type=ContentType.objects.get(model=model_name),
             scope_id=value
+        )
+
+    def filter_contains_vid(self, queryset, name, value):
+        """
+        Return all VLANGroups which contain the given VLAN ID.
+        """
+        table_name = VLANGroup._meta.db_table
+        # TODO: See if this can be optimized without compromising queryset integrity
+        # Expand VLAN ID ranges to query by integer
+        groups = VLANGroup.objects.raw(
+            f'SELECT id FROM {table_name}, unnest(vid_ranges) vid_range WHERE %s <@ vid_range',
+            params=(value,)
+        )
+        return queryset.filter(
+            pk__in=[g.id for g in groups]
         )
 
 
@@ -975,7 +1038,7 @@ class VLANFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
 
     class Meta:
         model = VLAN
-        fields = ['id', 'vid', 'name', 'description']
+        fields = ('id', 'vid', 'name', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -1008,7 +1071,7 @@ class ServiceTemplateFilterSet(NetBoxModelFilterSet):
 
     class Meta:
         model = ServiceTemplate
-        fields = ['id', 'name', 'protocol', 'description']
+        fields = ('id', 'name', 'protocol', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -1041,18 +1104,17 @@ class ServiceFilterSet(NetBoxModelFilterSet):
         to_field_name='name',
         label=_('Virtual machine (name)'),
     )
-    ipaddress_id = django_filters.ModelMultipleChoiceFilter(
+    ip_address_id = django_filters.ModelMultipleChoiceFilter(
         field_name='ipaddresses',
         queryset=IPAddress.objects.all(),
         label=_('IP address (ID)'),
     )
-    ipaddress = django_filters.ModelMultipleChoiceFilter(
+    ip_address = django_filters.ModelMultipleChoiceFilter(
         field_name='ipaddresses__address',
         queryset=IPAddress.objects.all(),
         to_field_name='address',
         label=_('IP address'),
     )
-
     port = NumericArrayFilter(
         field_name='ports',
         lookup_expr='contains'
@@ -1060,7 +1122,7 @@ class ServiceFilterSet(NetBoxModelFilterSet):
 
     class Meta:
         model = Service
-        fields = ['id', 'name', 'protocol', 'description']
+        fields = ('id', 'name', 'protocol', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():

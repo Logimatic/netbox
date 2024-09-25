@@ -1,6 +1,3 @@
-# Prefix for nested serializers
-NESTED_SERIALIZER_PREFIX = 'Nested'
-
 # RQ queue names
 RQ_QUEUE_DEFAULT = 'default'
 RQ_QUEUE_HIGH = 'high'
@@ -26,6 +23,9 @@ ADVISORY_LOCK_KEYS = {
     'wirelesslangroup': 105600,
     'inventoryitem': 105700,
     'inventoryitemtemplate': 105800,
+
+    # Jobs
+    'job-schedules': 110100,
 }
 
 # Default view action permission mapping
@@ -36,3 +36,10 @@ DEFAULT_ACTION_PERMISSIONS = {
     'bulk_edit': {'change'},
     'bulk_delete': {'delete'},
 }
+
+# General-purpose tokens
+CENSOR_TOKEN = '********'
+CENSOR_TOKEN_CHANGED = '***CHANGED***'
+
+# Placeholder text for empty tables
+EMPTY_TABLE_TEXT = 'No results found'
