@@ -14,7 +14,7 @@
 {% block extra_controls %}
   {% if perms.dcim.change_devicetype %}
     <div class="dropdown">
-      <button type="button" class="btn btn-primary btn-sm dropdown-toggle"data-bs-toggle="dropdown" aria-expanded="false">
+      <button type="button" class="btn btn-primary dropdown-toggle"data-bs-toggle="dropdown" aria-expanded="false">
         <i class="mdi mdi-plus-thick" aria-hidden="true"></i> {% trans "Add Components" %}
       </button>
       <ul class="dropdown-menu">
@@ -38,6 +38,9 @@
         {% endif %}
         {% if perms.dcim.add_rearporttemplate %}
           <li><a class="dropdown-item" href="{% url 'dcim:rearporttemplate_add' %}?module_type={{ object.pk }}&return_url={% url 'dcim:moduletype_rearports' pk=object.pk %}">{% trans "Rear Ports" %}</a></li>
+        {% endif %}
+        {% if perms.dcim.add_modulebaytemplate %}
+          <li><a class="dropdown-item" href="{% url 'dcim:modulebaytemplate_add' %}?module_type={{ object.pk }}&return_url={% url 'dcim:moduletype_modulebays' pk=object.pk %}">{% trans "Module Bays" %}</a></li>
         {% endif %}
       </ul>
     </div>

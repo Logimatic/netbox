@@ -84,9 +84,7 @@ class GitBackend(DataBackend):
         clone_args = {
             "branch": self.params.get('branch'),
             "config": self.config,
-            "depth": 1,
             "errstream": porcelain.NoneStream(),
-            "quiet": True,
         }
 
         if self.url_scheme in ('http', 'https'):
@@ -97,12 +95,15 @@ class GitBackend(DataBackend):
                         "password": self.params.get('password'),
                     }
                 )
+        if self.url_scheme:
+            clone_args["quiet"] = True
+            clone_args["depth"] = 1
 
         logger.debug(f"Cloning git repo: {self.url}")
         try:
             porcelain.clone(self.url, local_path.name, **clone_args)
         except BaseException as e:
-            raise SyncError(f"Fetching remote data failed ({type(e).__name__}): {e}")
+            raise SyncError(_("Fetching remote data failed ({name}): {error}").format(name=type(e).__name__, error=e))
 
         yield local_path.name
 
@@ -149,7 +150,8 @@ class S3Backend(DataBackend):
             region_name=self._region_name,
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
-            config=self.config
+            config=self.config,
+            endpoint_url=self._endpoint_url
         )
         bucket = s3.Bucket(self._bucket_name)
 
@@ -175,6 +177,11 @@ class S3Backend(DataBackend):
     def _bucket_name(self):
         url_path = urlparse(self.url).path.lstrip('/')
         return url_path.split('/')[0]
+
+    @property
+    def _endpoint_url(self):
+        url_path = urlparse(self.url)
+        return url_path._replace(params="", fragment="", query="", path="").geturl()
 
     @property
     def _remote_path(self):

@@ -13,6 +13,8 @@ from .models import *
 
 __all__ = (
     'CircuitFilterSet',
+    'CircuitGroupAssignmentFilterSet',
+    'CircuitGroupFilterSet',
     'CircuitTerminationFilterSet',
     'CircuitTypeFilterSet',
     'ProviderNetworkFilterSet',
@@ -64,10 +66,16 @@ class ProviderFilterSet(NetBoxModelFilterSet, ContactModelFilterSet):
         queryset=ASN.objects.all(),
         label=_('ASN (ID)'),
     )
+    asn = django_filters.ModelMultipleChoiceFilter(
+        field_name='asns__asn',
+        queryset=ASN.objects.all(),
+        to_field_name='asn',
+        label=_('ASN'),
+    )
 
     class Meta:
         model = Provider
-        fields = ['id', 'name', 'slug', 'description']
+        fields = ('id', 'name', 'slug', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -95,7 +103,7 @@ class ProviderAccountFilterSet(NetBoxModelFilterSet):
 
     class Meta:
         model = ProviderAccount
-        fields = ['id', 'name', 'account', 'description']
+        fields = ('id', 'name', 'account', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -122,7 +130,7 @@ class ProviderNetworkFilterSet(NetBoxModelFilterSet):
 
     class Meta:
         model = ProviderNetwork
-        fields = ['id', 'name', 'service_id', 'description']
+        fields = ('id', 'name', 'service_id', 'description')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -139,7 +147,7 @@ class CircuitTypeFilterSet(OrganizationalModelFilterSet):
 
     class Meta:
         model = CircuitType
-        fields = ['id', 'name', 'slug', 'color', 'description']
+        fields = ('id', 'name', 'slug', 'color', 'description')
 
 
 class CircuitFilterSet(NetBoxModelFilterSet, TenancyFilterSet, ContactModelFilterSet):
@@ -157,6 +165,12 @@ class CircuitFilterSet(NetBoxModelFilterSet, TenancyFilterSet, ContactModelFilte
         field_name='provider_account',
         queryset=ProviderAccount.objects.all(),
         label=_('Provider account (ID)'),
+    )
+    provider_account = django_filters.ModelMultipleChoiceFilter(
+        field_name='provider_account__account',
+        queryset=Provider.objects.all(),
+        to_field_name='account',
+        label=_('Provider account (account)'),
     )
     provider_network_id = django_filters.ModelMultipleChoiceFilter(
         field_name='terminations__provider_network',
@@ -214,10 +228,18 @@ class CircuitFilterSet(NetBoxModelFilterSet, TenancyFilterSet, ContactModelFilte
         to_field_name='slug',
         label=_('Site (slug)'),
     )
+    termination_a_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=CircuitTermination.objects.all(),
+        label=_('Termination A (ID)'),
+    )
+    termination_z_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=CircuitTermination.objects.all(),
+        label=_('Termination A (ID)'),
+    )
 
     class Meta:
         model = Circuit
-        fields = ['id', 'cid', 'description', 'install_date', 'termination_date', 'commit_rate']
+        fields = ('id', 'cid', 'description', 'install_date', 'termination_date', 'commit_rate')
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -255,10 +277,24 @@ class CircuitTerminationFilterSet(NetBoxModelFilterSet, CabledObjectFilterSet):
         queryset=ProviderNetwork.objects.all(),
         label=_('ProviderNetwork (ID)'),
     )
+    provider_id = django_filters.ModelMultipleChoiceFilter(
+        field_name='circuit__provider_id',
+        queryset=Provider.objects.all(),
+        label=_('Provider (ID)'),
+    )
+    provider = django_filters.ModelMultipleChoiceFilter(
+        field_name='circuit__provider__slug',
+        queryset=Provider.objects.all(),
+        to_field_name='slug',
+        label=_('Provider (slug)'),
+    )
 
     class Meta:
         model = CircuitTermination
-        fields = ['id', 'term_side', 'port_speed', 'upstream_speed', 'xconnect_id', 'description', 'cable_end']
+        fields = (
+            'id', 'term_side', 'port_speed', 'upstream_speed', 'xconnect_id', 'description', 'mark_connected',
+            'pp_info', 'cable_end',
+        )
 
     def search(self, queryset, name, value):
         if not value.strip():
@@ -269,3 +305,60 @@ class CircuitTerminationFilterSet(NetBoxModelFilterSet, CabledObjectFilterSet):
             Q(pp_info__icontains=value) |
             Q(description__icontains=value)
         ).distinct()
+
+
+class CircuitGroupFilterSet(OrganizationalModelFilterSet, TenancyFilterSet):
+
+    class Meta:
+        model = CircuitGroup
+        fields = ('id', 'name', 'slug', 'description')
+
+
+class CircuitGroupAssignmentFilterSet(NetBoxModelFilterSet):
+    q = django_filters.CharFilter(
+        method='search',
+        label=_('Search'),
+    )
+    provider_id = django_filters.ModelMultipleChoiceFilter(
+        field_name='circuit__provider',
+        queryset=Provider.objects.all(),
+        label=_('Provider (ID)'),
+    )
+    provider = django_filters.ModelMultipleChoiceFilter(
+        field_name='circuit__provider__slug',
+        queryset=Provider.objects.all(),
+        to_field_name='slug',
+        label=_('Provider (slug)'),
+    )
+    circuit_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=Circuit.objects.all(),
+        label=_('Circuit (ID)'),
+    )
+    circuit = django_filters.ModelMultipleChoiceFilter(
+        field_name='circuit__cid',
+        queryset=Circuit.objects.all(),
+        to_field_name='cid',
+        label=_('Circuit (CID)'),
+    )
+    group_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=CircuitGroup.objects.all(),
+        label=_('Circuit group (ID)'),
+    )
+    group = django_filters.ModelMultipleChoiceFilter(
+        field_name='group__slug',
+        queryset=CircuitGroup.objects.all(),
+        to_field_name='slug',
+        label=_('Circuit group (slug)'),
+    )
+
+    class Meta:
+        model = CircuitGroupAssignment
+        fields = ('id', 'priority')
+
+    def search(self, queryset, name, value):
+        if not value.strip():
+            return queryset
+        return queryset.filter(
+            Q(circuit__cid__icontains=value) |
+            Q(group__name__icontains=value)
+        )

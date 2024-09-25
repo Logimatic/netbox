@@ -9,23 +9,26 @@ from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist, Valida
 from django.db import transaction, IntegrityError
 from django.db.models import ManyToManyField, ProtectedError, RestrictedError
 from django.db.models.fields.reverse_related import ManyToManyRel
-from django.forms import HiddenInput, ModelMultipleChoiceField, MultipleHiddenInput
+from django.forms import ModelMultipleChoiceField, MultipleHiddenInput
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from django.utils.translation import gettext as _
 from django_tables2.export import TableExport
+from mptt.models import MPTTModel
 
-from extras.models import ExportTemplate
-from extras.signals import clear_events
+from core.models import ObjectType
+from core.signals import clear_events
+from extras.choices import CustomFieldUIEditableChoices
+from extras.models import CustomField, ExportTemplate
 from utilities.error_handlers import handle_protectederror
 from utilities.exceptions import AbortRequest, AbortTransaction, PermissionsViolation
 from utilities.forms import BulkRenameForm, ConfirmationForm, restrict_form_fields
 from utilities.forms.bulk_import import BulkImportForm
-from utilities.htmx import is_embedded, is_htmx
+from utilities.htmx import htmx_partial
 from utilities.permissions import get_permission_for_model
-from utilities.utils import get_viewname
-from utilities.views import GetReturnURLMixin
+from utilities.views import GetReturnURLMixin, get_viewname
 from .base import BaseMultiObjectView
 from .mixins import ActionsMixin, TableMixin
 from .utils import get_prerequisite_model
@@ -106,7 +109,13 @@ class ObjectListView(BaseMultiObjectView, ActionsMixin, TableMixin):
         try:
             return template.render_to_response(self.queryset)
         except Exception as e:
-            messages.error(request, f"There was an error rendering the selected export template ({template.name}): {e}")
+            messages.error(
+                request,
+                _("There was an error rendering the selected export template ({template}): {error}").format(
+                    template=template.name,
+                    error=e
+                )
+            )
             # Strip the `export` param and redirect user to the filtered objects list
             query_params = request.GET.copy()
             query_params.pop('export')
@@ -124,7 +133,7 @@ class ObjectListView(BaseMultiObjectView, ActionsMixin, TableMixin):
             request: The current request
         """
         model = self.queryset.model
-        content_type = ContentType.objects.get_for_model(model)
+        object_type = ObjectType.objects.get_for_model(model)
 
         if self.filterset:
             self.queryset = self.filterset(request.GET, self.queryset, request=request).qs
@@ -143,7 +152,7 @@ class ObjectListView(BaseMultiObjectView, ActionsMixin, TableMixin):
 
             # Render an ExportTemplate
             elif request.GET['export']:
-                template = get_object_or_404(ExportTemplate, content_types=content_type, name=request.GET['export'])
+                template = get_object_or_404(ExportTemplate, object_types=object_type, name=request.GET['export'])
                 return self.export_template(template, request)
 
             # Check for YAML export support on the model
@@ -162,21 +171,23 @@ class ObjectListView(BaseMultiObjectView, ActionsMixin, TableMixin):
         table = self.get_table(self.queryset, request, has_bulk_actions)
 
         # If this is an HTMX request, return only the rendered table HTML
-        if is_htmx(request):
-            if is_embedded(request):
+        if htmx_partial(request):
+            if request.GET.get('embedded', False):
                 table.embedded = True
                 # Hide selection checkboxes
                 if 'pk' in table.base_columns:
                     table.columns.hide('pk')
             return render(request, 'htmx/table.html', {
                 'table': table,
+                'model': model,
+                'actions': actions,
             })
 
         context = {
             'model': model,
             'table': table,
             'actions': actions,
-            'filter_form': self.filterset_form(request.GET, label_suffix='') if self.filterset_form else None,
+            'filter_form': self.filterset_form(request.GET) if self.filterset_form else None,
             'prerequisite_model': get_prerequisite_model(self.queryset),
             **self.get_extra_context(request),
         }
@@ -314,13 +325,22 @@ class BulkImportView(GetReturnURLMixin, BaseMultiObjectView):
         return data
 
     def _get_form_fields(self):
-        # Exclude any fields which use a HiddenInput widget
-        return {
-            name: field for name, field in self.model_form().fields.items()
-            if type(field.widget) is not HiddenInput
-        }
+        form = self.model_form()
+        required_fields = {}
+        optional_fields = {}
 
-    def _save_object(self, model_form, request):
+        # Return only visible fields, with required fields listed first
+        for field in form.visible_fields():
+            if field.is_hidden:
+                continue
+            elif field.field.required:
+                required_fields[field.name] = field.field
+            else:
+                optional_fields[field.name] = field.field
+
+        return {**required_fields, **optional_fields}
+
+    def _save_object(self, import_form, model_form, request):
 
         # Save the primary object
         obj = self.save_object(model_form, request)
@@ -345,11 +365,14 @@ class BulkImportView(GetReturnURLMixin, BaseMultiObjectView):
                     related_obj = f.save()
                     related_obj_pks.append(related_obj.pk)
                 else:
-                    # Replicate errors on the related object form to the primary form for display
+                    # Replicate errors on the related object form to the import form for display and abort
                     for subfield_name, errors in f.errors.items():
                         for err in errors:
-                            err_msg = "{}[{}] {}: {}".format(field_name, i, subfield_name, err)
-                            model_form.add_error(None, err_msg)
+                            if subfield_name == '__all__':
+                                err_msg = f"{field_name}[{i}]: {err}"
+                            else:
+                                err_msg = f"{field_name}[{i}] {subfield_name}: {err}"
+                            import_form.add_error(None, err_msg)
                     raise AbortTransaction()
 
             # Enforce object-level permissions on related objects
@@ -390,12 +413,23 @@ class BulkImportView(GetReturnURLMixin, BaseMultiObjectView):
                 try:
                     instance = prefetched_objects[object_id]
                 except KeyError:
-                    form.add_error('data', f"Row {i}: Object with ID {object_id} does not exist")
+                    form.add_error('data', _("Row {i}: Object with ID {id} does not exist").format(i=i, id=object_id))
                     raise ValidationError('')
 
                 # Take a snapshot for change logging
                 if instance.pk and hasattr(instance, 'snapshot'):
                     instance.snapshot()
+
+            else:
+                # For newly created objects, apply any default custom field values
+                custom_fields = CustomField.objects.filter(
+                    object_types=ContentType.objects.get_for_model(self.queryset.model),
+                    ui_editable=CustomFieldUIEditableChoices.YES
+                )
+                for cf in custom_fields:
+                    field_name = f'cf_{cf.name}'
+                    if field_name not in record:
+                        record[field_name] = cf.default
 
             # Instantiate the model form for the object
             model_form_kwargs = {
@@ -416,7 +450,7 @@ class BulkImportView(GetReturnURLMixin, BaseMultiObjectView):
             restrict_form_fields(model_form, request.user)
 
             if model_form.is_valid():
-                obj = self._save_object(model_form, request)
+                obj = self._save_object(form, model_form, request)
                 saved_objects.append(obj)
             else:
                 # Replicate model form errors for display
@@ -581,6 +615,10 @@ class BulkEditView(GetReturnURLMixin, BaseMultiObjectView):
             if form.cleaned_data.get('remove_tags', None):
                 obj.tags.remove(*form.cleaned_data['remove_tags'])
 
+        # Rebuild the tree for MPTT models
+        if issubclass(self.queryset.model, MPTTModel):
+            self.queryset.model.objects.rebuild()
+
         return updated_objects
 
     #
@@ -656,7 +694,10 @@ class BulkEditView(GetReturnURLMixin, BaseMultiObjectView):
         # Retrieve objects being edited
         table = self.table(self.queryset.filter(pk__in=pk_list), orderable=False)
         if not table.rows:
-            messages.warning(request, "No {} were selected.".format(model._meta.verbose_name_plural))
+            messages.warning(
+                request,
+                _("No {object_type} were selected.").format(object_type=model._meta.verbose_name_plural)
+            )
             return redirect(self.get_return_url(request))
 
         return render(request, self.template_name, {
@@ -733,8 +774,13 @@ class BulkRenameView(GetReturnURLMixin, BaseMultiObjectView):
                             if self.queryset.filter(pk__in=renamed_pks).count() != len(selected_objects):
                                 raise PermissionsViolation
 
-                            model_name = self.queryset.model._meta.verbose_name_plural
-                            messages.success(request, f"Renamed {len(selected_objects)} {model_name}")
+                            messages.success(
+                                request,
+                                _("Renamed {count} {object_type}").format(
+                                    count=len(selected_objects),
+                                    object_type=self.queryset.model._meta.verbose_name_plural
+                                )
+                            )
                             return redirect(self.get_return_url(request))
 
                 except (AbortRequest, PermissionsViolation) as e:
@@ -826,7 +872,10 @@ class BulkDeleteView(GetReturnURLMixin, BaseMultiObjectView):
                     messages.error(request, mark_safe(e.message))
                     return redirect(self.get_return_url(request))
 
-                msg = f"Deleted {deleted_count} {model._meta.verbose_name_plural}"
+                msg = _("Deleted {count} {object_type}").format(
+                    count=deleted_count,
+                    object_type=model._meta.verbose_name_plural
+                )
                 logger.info(msg)
                 messages.success(request, msg)
                 return redirect(self.get_return_url(request))
@@ -843,7 +892,10 @@ class BulkDeleteView(GetReturnURLMixin, BaseMultiObjectView):
         # Retrieve objects being deleted
         table = self.table(self.queryset.filter(pk__in=pk_list), orderable=False)
         if not table.rows:
-            messages.warning(request, "No {} were selected for deletion.".format(model._meta.verbose_name_plural))
+            messages.warning(
+                request,
+                _("No {object_type} were selected.").format(object_type=model._meta.verbose_name_plural)
+            )
             return redirect(self.get_return_url(request))
 
         return render(request, self.template_name, {
@@ -888,7 +940,10 @@ class BulkComponentCreateView(GetReturnURLMixin, BaseMultiObjectView):
 
         selected_objects = self.parent_model.objects.filter(pk__in=pk_list)
         if not selected_objects:
-            messages.warning(request, "No {} were selected.".format(self.parent_model._meta.verbose_name_plural))
+            messages.warning(
+                request,
+                _("No {object_type} were selected.").format(object_type=self.parent_model._meta.verbose_name_plural)
+            )
             return redirect(self.get_return_url(request))
         table = self.table(selected_objects, orderable=False)
 

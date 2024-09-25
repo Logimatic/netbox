@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from dcim.tables.devices import BaseInterfaceTable
 from netbox.tables import NetBoxTable, columns
 from tenancy.tables import ContactsColumnMixin, TenancyColumnsMixin
+from utilities.templatetags.helpers import humanize_megabytes
 from virtualization.models import VirtualDisk, VirtualMachine, VMInterface
 
 __all__ = (
@@ -32,6 +33,15 @@ VMINTERFACE_BUTTONS = """
       {% endif %}
     </ul>
   </span>
+{% endif %}
+{% if perms.vpn.add_tunnel and not record.tunnel_termination %}
+  <a href="{% url 'vpn:tunnel_add' %}?termination1_type=virtualization.virtualmachine&termination1_parent={{ record.virtual_machine.pk }}&termination1_termination={{ record.pk }}&return_url={% url 'virtualization:virtualmachine_interfaces' pk=object.pk %}" title="Create a tunnel" class="btn btn-success btn-sm">
+    <i class="mdi mdi-tunnel-outline" aria-hidden="true"></i>
+  </a>
+{% elif perms.vpn.delete_tunneltermination and record.tunnel_termination %}
+  <a href="{% url 'vpn:tunneltermination_delete' pk=record.tunnel_termination.pk %}?return_url={% url 'virtualization:virtualmachine_interfaces' pk=object.pk %}" title="Remove tunnel" class="btn btn-danger btn-sm">
+    <i class="mdi mdi-tunnel-outline" aria-hidden="true"></i>
+  </a>
 {% endif %}
 """
 
@@ -64,6 +74,10 @@ class VirtualMachineTable(TenancyColumnsMixin, ContactsColumnMixin, NetBoxTable)
     role = columns.ColoredLabelColumn(
         verbose_name=_('Role'),
     )
+    platform = tables.Column(
+        linkify=True,
+        verbose_name=_('Platform')
+    )
     comments = columns.MarkdownColumn(
         verbose_name=_('Comments'),
     )
@@ -93,17 +107,23 @@ class VirtualMachineTable(TenancyColumnsMixin, ContactsColumnMixin, NetBoxTable)
         verbose_name=_('Config Template'),
         linkify=True
     )
+    disk = tables.Column(
+        verbose_name=_('Disk'),
+    )
 
     class Meta(NetBoxTable.Meta):
         model = VirtualMachine
         fields = (
-            'pk', 'id', 'name', 'status', 'site', 'cluster', 'device', 'role', 'tenant', 'tenant_group', 'platform',
-            'vcpus', 'memory', 'disk', 'primary_ip4', 'primary_ip6', 'primary_ip', 'description', 'comments',
-            'config_template', 'contacts', 'tags', 'created', 'last_updated',
+            'pk', 'id', 'name', 'status', 'site', 'cluster', 'device', 'role', 'tenant', 'tenant_group', 'vcpus',
+            'memory', 'disk', 'primary_ip4', 'primary_ip6', 'primary_ip', 'description', 'comments', 'config_template',
+            'serial', 'contacts', 'tags', 'created', 'last_updated',
         )
         default_columns = (
             'pk', 'name', 'status', 'site', 'cluster', 'role', 'tenant', 'vcpus', 'memory', 'disk', 'primary_ip',
         )
+
+    def render_disk(self, value):
+        return humanize_megabytes(value)
 
 
 #
@@ -160,6 +180,8 @@ class VirtualMachineVMInterfaceTable(VMInterfaceTable):
         default_columns = ('pk', 'name', 'enabled', 'mac_address', 'mtu', 'mode', 'description', 'ip_addresses')
         row_attrs = {
             'data-name': lambda record: record.name,
+            'data-virtual': lambda record: "true",
+            'data-enabled': lambda record: "true" if record.enabled else "false",
         }
 
 
@@ -171,6 +193,9 @@ class VirtualDiskTable(NetBoxTable):
     name = tables.Column(
         verbose_name=_('Name'),
         linkify=True
+    )
+    size = tables.Column(
+        verbose_name=_('Size')
     )
     tags = columns.TagColumn(
         url_name='virtualization:virtualdisk_list'
@@ -185,6 +210,9 @@ class VirtualDiskTable(NetBoxTable):
         row_attrs = {
             'data-name': lambda record: record.name,
         }
+
+    def render_size(self, value):
+        return humanize_megabytes(value)
 
 
 class VirtualMachineVirtualDiskTable(VirtualDiskTable):

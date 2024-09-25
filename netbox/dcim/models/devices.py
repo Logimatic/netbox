@@ -18,10 +18,10 @@ from dcim.choices import *
 from dcim.constants import *
 from extras.models import ConfigContextModel, CustomField
 from extras.querysets import ConfigContextModelQuerySet
+from netbox.choices import ColorChoices
 from netbox.config import ConfigItem
 from netbox.models import OrganizationalModel, PrimaryModel
 from netbox.models.features import ContactsMixin, ImageAttachmentsMixin
-from utilities.choices import ColorChoices
 from utilities.fields import ColorField, CounterCacheField, NaturalOrderingField
 from utilities.tracking import TrackingModelMixin
 from .device_components import *
@@ -221,23 +221,24 @@ class DeviceType(ImageAttachmentsMixin, PrimaryModel, WeightMixin):
         return reverse('dcim:devicetype', args=[self.pk])
 
     @property
-    def get_full_name(self):
-        return f"{ self.manufacturer } { self.model }"
+    def full_name(self):
+        return f"{self.manufacturer} {self.model}"
 
     def to_yaml(self):
         data = {
             'manufacturer': self.manufacturer.name,
             'model': self.model,
             'slug': self.slug,
+            'description': self.description,
             'default_platform': self.default_platform.name if self.default_platform else None,
             'part_number': self.part_number,
             'u_height': float(self.u_height),
             'is_full_depth': self.is_full_depth,
             'subdevice_role': self.subdevice_role,
             'airflow': self.airflow,
-            'comments': self.comments,
             'weight': float(self.weight) if self.weight is not None else None,
             'weight_unit': self.weight_unit,
+            'comments': self.comments,
         }
 
         # Component templates
@@ -387,8 +388,14 @@ class ModuleType(ImageAttachmentsMixin, PrimaryModel, WeightMixin):
         blank=True,
         help_text=_('Discrete part number (optional)')
     )
+    airflow = models.CharField(
+        verbose_name=_('airflow'),
+        max_length=50,
+        choices=ModuleAirflowChoices,
+        blank=True
+    )
 
-    clone_fields = ('manufacturer', 'weight', 'weight_unit',)
+    clone_fields = ('manufacturer', 'weight', 'weight_unit', 'airflow')
     prerequisite_models = (
         'dcim.Manufacturer',
     )
@@ -410,14 +417,19 @@ class ModuleType(ImageAttachmentsMixin, PrimaryModel, WeightMixin):
     def get_absolute_url(self):
         return reverse('dcim:moduletype', args=[self.pk])
 
+    @property
+    def full_name(self):
+        return f"{self.manufacturer} {self.model}"
+
     def to_yaml(self):
         data = {
             'manufacturer': self.manufacturer.name,
             'model': self.model,
             'part_number': self.part_number,
-            'comments': self.comments,
+            'description': self.description,
             'weight': float(self.weight) if self.weight is not None else None,
             'weight_unit': self.weight_unit,
+            'comments': self.comments,
         }
 
         # Component templates
@@ -687,11 +699,10 @@ class Device(
         blank=True,
         null=True
     )
-    vc_position = models.PositiveSmallIntegerField(
+    vc_position = models.PositiveIntegerField(
         verbose_name=_('VC position'),
         blank=True,
         null=True,
-        validators=[MaxValueValidator(255)],
         help_text=_('Virtual chassis position')
     )
     vc_priority = models.PositiveSmallIntegerField(
@@ -815,20 +826,6 @@ class Device(
     def get_absolute_url(self):
         return reverse('dcim:device', args=[self.pk])
 
-    @property
-    def device_role(self):
-        """
-        For backwards compatibility with pre-v3.6 code expecting a device_role to be present on Device.
-        """
-        return self.role
-
-    @device_role.setter
-    def device_role(self, value):
-        """
-        For backwards compatibility with pre-v3.6 code expecting a device_role to be present on Device.
-        """
-        self.role = value
-
     def clean(self):
         super().clean()
 
@@ -875,7 +872,7 @@ class Device(
             if self.position and self.device_type.u_height == 0:
                 raise ValidationError({
                     'position': _(
-                        "A U0 device type ({device_type}) cannot be assigned to a rack position."
+                        "A 0U device type ({device_type}) cannot be assigned to a rack position."
                     ).format(device_type=self.device_type)
                 })
 
@@ -994,17 +991,16 @@ class Device(
             bulk_create: If True, bulk_create() will be called to create all components in a single query
                          (default). Otherwise, save() will be called on each instance individually.
         """
-        components = [obj.instantiate(device=self) for obj in queryset]
-        if not components:
-            return
-
-        # Set default values for any applicable custom fields
         model = queryset.model.component_model
-        if cf_defaults := CustomField.objects.get_defaults_for_model(model):
-            for component in components:
-                component.custom_field_data = cf_defaults
 
         if bulk_create:
+            components = [obj.instantiate(device=self) for obj in queryset]
+            if not components:
+                return
+            # Set default values for any applicable custom fields
+            if cf_defaults := CustomField.objects.get_defaults_for_model(model):
+                for component in components:
+                    component.custom_field_data = cf_defaults
             model.objects.bulk_create(components)
             # Manually send the post_save signal for each of the newly created components
             for component in components:
@@ -1017,7 +1013,11 @@ class Device(
                     update_fields=None
                 )
         else:
-            for component in components:
+            for obj in queryset:
+                component = obj.instantiate(device=self)
+                # Set default values for any applicable custom fields
+                if cf_defaults := CustomField.objects.get_defaults_for_model(model):
+                    component.custom_field_data = cf_defaults
                 component.save()
 
     def save(self, *args, **kwargs):
@@ -1046,7 +1046,8 @@ class Device(
             self._instantiate_components(self.device_type.interfacetemplates.all())
             self._instantiate_components(self.device_type.rearporttemplates.all())
             self._instantiate_components(self.device_type.frontporttemplates.all())
-            self._instantiate_components(self.device_type.modulebaytemplates.all())
+            # Disable bulk_create to accommodate MPTT
+            self._instantiate_components(self.device_type.modulebaytemplates.all(), bulk_create=False)
             self._instantiate_components(self.device_type.devicebaytemplates.all())
             # Disable bulk_create to accommodate MPTT
             self._instantiate_components(self.device_type.inventoryitemtemplates.all(), bulk_create=False)
@@ -1098,7 +1099,7 @@ class Device(
 
         :param if_master: If True, return VC member interfaces only if this Device is the VC master.
         """
-        filter = Q(device=self)
+        filter = Q(device=self) if self.pk else Q()
         if self.virtual_chassis and (self.virtual_chassis.master == self or not if_master):
             filter |= Q(device__virtual_chassis=self.virtual_chassis, mgmt_only=False)
         return Interface.objects.filter(filter)
@@ -1207,6 +1208,17 @@ class Module(PrimaryModel, ConfigContextModel):
                 )
             )
 
+        # Check for recursion
+        module = self
+        module_bays = []
+        modules = []
+        while module:
+            if module.pk in modules or module.module_bay.pk in module_bays:
+                raise ValidationError(_("A module bay cannot belong to a module installed within it."))
+            modules.append(module.pk)
+            module_bays.append(module.module_bay.pk)
+            module = module.module_bay.module if module.module_bay else None
+
     def save(self, *args, **kwargs):
         is_new = self.pk is None
 
@@ -1228,7 +1240,8 @@ class Module(PrimaryModel, ConfigContextModel):
             ("powerporttemplates", "powerports", PowerPort),
             ("poweroutlettemplates", "poweroutlets", PowerOutlet),
             ("rearporttemplates", "rearports", RearPort),
-            ("frontporttemplates", "frontports", FrontPort)
+            ("frontporttemplates", "frontports", FrontPort),
+            ("modulebaytemplates", "modulebays", ModuleBay),
         ]:
             create_instances = []
             update_instances = []
@@ -1257,17 +1270,22 @@ class Module(PrimaryModel, ConfigContextModel):
                 if not disable_replication:
                     create_instances.append(template_instance)
 
-            component_model.objects.bulk_create(create_instances)
-            # Emit the post_save signal for each newly created object
-            for component in create_instances:
-                post_save.send(
-                    sender=component_model,
-                    instance=component,
-                    created=True,
-                    raw=False,
-                    using='default',
-                    update_fields=None
-                )
+            if component_model is not ModuleBay:
+                component_model.objects.bulk_create(create_instances)
+                # Emit the post_save signal for each newly created object
+                for component in create_instances:
+                    post_save.send(
+                        sender=component_model,
+                        instance=component,
+                        created=True,
+                        raw=False,
+                        using='default',
+                        update_fields=None
+                    )
+            else:
+                # ModuleBays must be saved individually for MPTT
+                for instance in create_instances:
+                    instance.save()
 
             update_fields = ['module']
             component_model.objects.bulk_update(update_instances, update_fields)
