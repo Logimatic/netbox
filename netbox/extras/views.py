@@ -6,8 +6,8 @@ from django.db.models import Count, Q
 from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils.module_loading import import_string
 from django.utils import timezone
+from django.utils.module_loading import import_string
 from django.utils.translation import gettext as _
 from django.views.generic import View
 
@@ -20,7 +20,6 @@ from extras.choices import LogLevelChoices
 from extras.dashboard.forms import DashboardWidgetAddForm, DashboardWidgetForm
 from extras.dashboard.utils import get_widget_class
 from netbox.constants import DEFAULT_ACTION_PERMISSIONS
-from netbox.registry import registry
 from netbox.views import generic
 from netbox.views.generic.mixins import TableMixin
 from utilities.forms import ConfirmationForm, get_field_value
@@ -1142,12 +1141,14 @@ class ScriptView(BaseScriptView):
         script_class = self._get_script_class(script)
         if not script_class:
             return render(request, 'extras/script.html', {
+                'object': script,
                 'script': script,
             })
 
         form = script_class.as_form(initial=normalize_querydict(request.GET))
 
         return render(request, 'extras/script.html', {
+            'object': script,
             'script': script,
             'script_class': script_class,
             'form': form,
@@ -1163,6 +1164,7 @@ class ScriptView(BaseScriptView):
         script_class = self._get_script_class(script)
         if not script_class:
             return render(request, 'extras/script.html', {
+                'object': script,
                 'script': script,
             })
 
@@ -1181,12 +1183,13 @@ class ScriptView(BaseScriptView):
                 data=form.cleaned_data,
                 request=copy_safe_request(request),
                 job_timeout=script.python_class.job_timeout,
-                commit=form.cleaned_data.pop('_commit')
+                commit=form.cleaned_data.pop('_commit'),
             )
 
             return redirect('extras:script_result', job_pk=job.pk)
 
         return render(request, 'extras/script.html', {
+            'object': script,
             'script': script,
             'script_class': script.python_class(),
             'form': form,

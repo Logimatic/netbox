@@ -1,12 +1,10 @@
-import traceback
-
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Prefetch, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic.base import RedirectView
 from jinja2.exceptions import TemplateError
 
@@ -425,7 +423,8 @@ class VirtualMachineRenderConfigView(generic.ObjectView):
         # If a direct export has been requested, return the rendered template content as a
         # downloadable file.
         if request.GET.get('export'):
-            response = HttpResponse(context['rendered_config'], content_type='text')
+            content = context['rendered_config'] or context['error_message']
+            response = HttpResponse(content, content_type='text')
             filename = f"{instance.name or 'config'}.txt"
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
@@ -443,17 +442,18 @@ class VirtualMachineRenderConfigView(generic.ObjectView):
 
         # Render the config template
         rendered_config = None
+        error_message = None
         if config_template := instance.get_config_template():
             try:
                 rendered_config = config_template.render(context=context_data)
             except TemplateError as e:
-                messages.error(request, _("An error occurred while rendering the template: {error}").format(error=e))
-                rendered_config = traceback.format_exc()
+                error_message = _("An error occurred while rendering the template: {error}").format(error=e)
 
         return {
             'config_template': config_template,
             'context_data': context_data,
             'rendered_config': rendered_config,
+            'error_message': error_message,
         }
 
 
@@ -657,7 +657,7 @@ class VirtualMachineBulkAddInterfaceView(generic.BulkComponentCreateView):
     default_return_url = 'virtualization:virtualmachine_list'
 
     def get_required_permission(self):
-        return f'virtualization.add_vminterface'
+        return 'virtualization.add_vminterface'
 
 
 class VirtualMachineBulkAddVirtualDiskView(generic.BulkComponentCreateView):
@@ -671,4 +671,4 @@ class VirtualMachineBulkAddVirtualDiskView(generic.BulkComponentCreateView):
     default_return_url = 'virtualization:virtualmachine_list'
 
     def get_required_permission(self):
-        return f'virtualization.add_virtualdisk'
+        return 'virtualization.add_virtualdisk'

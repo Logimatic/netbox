@@ -909,6 +909,13 @@ class ModularComponentTemplateForm(ComponentTemplateForm):
         if self.instance.pk:
             self.fields['module_type'].disabled = True
 
+        # Components attached to a module need to present this standardized substitution help text.
+        self.fields['name'].help_text = _(
+            "Alphanumeric ranges are supported for bulk creation. Mixed cases and types within a single range are not "
+            "supported (example: <code>[ge,xe]-0/0/[0-9]</code>). The token <code>{module}</code>, if present, will be "
+            "automatically replaced with the position value when creating a new module."
+        )
+
 
 class ConsolePortTemplateForm(ModularComponentTemplateForm):
     fieldsets = (
@@ -954,7 +961,7 @@ class PowerOutletTemplateForm(ModularComponentTemplateForm):
         queryset=PowerPortTemplate.objects.all(),
         required=False,
         query_params={
-            'devicetype_id': '$device_type',
+            'device_type_id': '$device_type',
         }
     )
 
@@ -1001,8 +1008,8 @@ class FrontPortTemplateForm(ModularComponentTemplateForm):
         queryset=RearPortTemplate.objects.all(),
         required=False,
         query_params={
-            'devicetype_id': '$device_type',
-            'moduletype_id': '$module_type',
+            'device_type_id': '$device_type',
+            'module_type_id': '$module_type',
         }
     )
 
@@ -1063,7 +1070,7 @@ class InventoryItemTemplateForm(ComponentTemplateForm):
         queryset=InventoryItemTemplate.objects.all(),
         required=False,
         query_params={
-            'devicetype_id': '$device_type'
+            'device_type_id': '$device_type'
         }
     )
     role = DynamicModelChoiceField(
@@ -1351,7 +1358,8 @@ class InterfaceForm(InterfaceCommonForm, ModularDeviceComponentForm):
     vlan_group = DynamicModelChoiceField(
         queryset=VLANGroup.objects.all(),
         required=False,
-        label=_('VLAN group')
+        label=_('VLAN group'),
+        help_text=_("Filter VLANs available for assignment by group.")
     )
     untagged_vlan = DynamicModelChoiceField(
         queryset=VLAN.objects.all(),
