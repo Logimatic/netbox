@@ -197,6 +197,9 @@ class DeviceAirflowChoices(ChoiceSet):
     AIRFLOW_LEFT_TO_RIGHT = 'left-to-right'
     AIRFLOW_RIGHT_TO_LEFT = 'right-to-left'
     AIRFLOW_SIDE_TO_REAR = 'side-to-rear'
+    AIRFLOW_REAR_TO_SIDE = 'rear-to-side'
+    AIRFLOW_BOTTOM_TO_TOP = 'bottom-to-top'
+    AIRFLOW_TOP_TO_BOTTOM = 'top-to-bottom'
     AIRFLOW_PASSIVE = 'passive'
     AIRFLOW_MIXED = 'mixed'
 
@@ -206,6 +209,9 @@ class DeviceAirflowChoices(ChoiceSet):
         (AIRFLOW_LEFT_TO_RIGHT, _('Left to right')),
         (AIRFLOW_RIGHT_TO_LEFT, _('Right to left')),
         (AIRFLOW_SIDE_TO_REAR, _('Side to rear')),
+        (AIRFLOW_REAR_TO_SIDE, _('Rear to side')),
+        (AIRFLOW_BOTTOM_TO_TOP, _('Bottom to top')),
+        (AIRFLOW_TOP_TO_BOTTOM, _('Top to bottom')),
         (AIRFLOW_PASSIVE, _('Passive')),
         (AIRFLOW_MIXED, _('Mixed')),
     )
@@ -684,6 +690,7 @@ class PowerOutletTypeChoices(ChoiceSet):
     # Direct current (DC)
     TYPE_DC = 'dc-terminal'
     # Proprietary
+    TYPE_EATON_C39 = 'eaton-c39'
     TYPE_HDOT_CX = 'hdot-cx'
     TYPE_SAF_D_GRID = 'saf-d-grid'
     TYPE_NEUTRIK_POWERCON_20A = 'neutrik-powercon-20a'
@@ -805,6 +812,7 @@ class PowerOutletTypeChoices(ChoiceSet):
             (TYPE_DC, 'DC Terminal'),
         )),
         (_('Proprietary'), (
+            (TYPE_EATON_C39, 'Eaton C39'),
             (TYPE_HDOT_CX, 'HDOT Cx'),
             (TYPE_SAF_D_GRID, 'Saf-D-Grid'),
             (TYPE_NEUTRIK_POWERCON_20A, 'Neutrik powerCON (20A)'),
@@ -926,6 +934,7 @@ class InterfaceTypeChoices(ChoiceSet):
     TYPE_80211AY = 'ieee802.11ay'
     TYPE_80211BE = 'ieee802.11be'
     TYPE_802151 = 'ieee802.15.1'
+    TYPE_802154 = 'ieee802.15.4'
     TYPE_OTHER_WIRELESS = 'other-wireless'
 
     # Cellular
@@ -1037,7 +1046,7 @@ class InterfaceTypeChoices(ChoiceSet):
         (
             _('Ethernet (modular)'),
             (
-		(TYPE_100ME_SFP, 'SFP (100ME FC)'),
+                (TYPE_100ME_SFP, 'SFP (100ME)'),
                 (TYPE_1GE_GBIC, 'GBIC (1GE)'),
                 (TYPE_1GE_SFP, 'SFP (1GE)'),
 		(TYPE_2x5GE_SFP, 'SFP (2.5GE FC)'),
@@ -1103,6 +1112,7 @@ class InterfaceTypeChoices(ChoiceSet):
                 (TYPE_80211AY, 'IEEE 802.11ay'),
                 (TYPE_80211BE, 'IEEE 802.11be'),
                 (TYPE_802151, 'IEEE 802.15.1 (Bluetooth)'),
+                (TYPE_802154, 'IEEE 802.15.4 (LR-WPAN)'),
                 (TYPE_OTHER_WIRELESS, 'Other (Wireless)'),
             )
         ),
