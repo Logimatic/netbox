@@ -211,8 +211,10 @@ class ASNRangeFilterSet(OrganizationalModelFilterSet, TenancyFilterSet):
     def search(self, queryset, name, value):
         if not value.strip():
             return queryset
-        qs_filter = Q(description__icontains=value)
-        return queryset.filter(qs_filter)
+        return queryset.filter(
+            Q(name__icontains=value) |
+            Q(description__icontains=value)
+        )
 
 
 class ASNFilterSet(OrganizationalModelFilterSet, TenancyFilterSet):
@@ -1078,7 +1080,7 @@ class VLANFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
         return queryset.filter(
             Q(interfaces_as_tagged=value) |
             Q(interfaces_as_untagged=value)
-        )
+        ).distinct()
 
     def filter_vminterface_id(self, queryset, name, value):
         if value is None:
@@ -1086,7 +1088,7 @@ class VLANFilterSet(NetBoxModelFilterSet, TenancyFilterSet):
         return queryset.filter(
             Q(vminterfaces_as_tagged=value) |
             Q(vminterfaces_as_untagged=value)
-        )
+        ).distinct()
 
 
 class ServiceTemplateFilterSet(NetBoxModelFilterSet):

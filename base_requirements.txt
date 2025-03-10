@@ -42,7 +42,7 @@ django-rich
 
 # Django integration for RQ (Reqis queuing)
 # https://github.com/rq/django-rq/blob/master/CHANGELOG.md
-django-rq<3.0
+django-rq
 
 # Abstraction models for rendering and paginating HTML tables
 # https://github.com/jieter/django-tables2/blob/master/CHANGELOG.md
@@ -101,7 +101,7 @@ netaddr
 nh3
 
 # Fork of PIL (Python Imaging Library) for image processing
-# https://github.com/python-pillow/Pillow/blob/main/CHANGES.rst
+# https://github.com/python-pillow/Pillow/releases
 Pillow
 
 # PostgreSQL database adapter for Python
@@ -118,7 +118,7 @@ requests
 
 # rq
 # https://github.com/rq/rq/blob/master/CHANGES.md
-rq<2.0
+rq
 
 # Social authentication framework
 # https://github.com/python-social-auth/social-core/blob/master/CHANGELOG.md
